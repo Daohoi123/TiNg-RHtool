@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TiNg RHtool</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758271750/logo_dia1pb.png">
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758271750/logo_dia1pb.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758006412/nen_ephcrp.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* Keep background fixed on scroll */
+        }
+        
+        /* Loading GIF styles */
+        .loading-gif {
+            width: 150px; /* Smaller loading GIF on mobile */
+            height: 150px;
+            mix-blend-mode: screen;
+        }
+
+        @media (min-width: 1024px) {
+            .loading-gif {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        #prompt-input::placeholder { color: #a0aec0; }
+        .drop-zone-active {
+            outline: 2px dashed #4299e1;
+            outline-offset: -4px;
+            background-color: rgba(66, 153, 225, 0.1);
+        }
+        
+        /* Hover effect for buttons on the image */
+        .corner-hotspot {
+            position: absolute;
+            z-index: 25;
+            padding: 1rem;
+        }
+        .hover-btn {
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .animate-from-left { transform: translateX(-15px); }
+        .animate-from-right { transform: translateX(15px); }
+        .corner-hotspot:hover .hover-btn, .touch .corner-hotspot .hover-btn { /* Show button on touch devices */
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        /* Image comparison styles */
+        .preview-container { cursor: grab; }
+        .preview-container.grabbing { cursor: grabbing; }
+        #image-compare-container, #preview-compare-container { display: none; }
+        #history-panel { transition: transform 0.3s ease-in-out; }
+        
+        /* New UI styles */
+        .nav-item {
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            background-color: #2D3E50; /* Dark gray-blue */
+        }
+        .nav-item.active img {
+            transform: scale(1.15);
+        }
+        .nav-item img {
+            transition: transform 0.2s ease-in-out;
+        }
+        .control-section {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .control-select, .control-textarea {
+            background-color: #2D3E50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+        .control-textarea::placeholder {
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 p-4 min-h-screen lg:h-screen lg:py-4">
+        
+        <!-- Navigation bar: horizontal on mobile, vertical on desktop -->
+        <nav class="flex flex-row lg:flex-col items-center justify-center lg:justify-start gap-4 bg-[#1C2A3A] p-2 lg:p-4 rounded-2xl shadow-lg w-full lg:w-auto">
+            <button id="nav-qwen" class="nav-item active">
+                <img src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759051851/logo_Qwen_qezdmm.png" alt="Qwen" class="w-12 h-12 lg:w-[70px] lg:h-auto object-contain">
+            </button>
+            <button id="nav-advanced" class="nav-item">
+                <img src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758007927/nang_cao_k6yhkj.png" alt="Advanced" class="w-12 h-12 lg:w-[70px] lg:h-auto object-contain" data-translate-alt="navAdvancedAlt">
+            </button>
+            <button id="nav-basic" class="nav-item">
+                <img src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758007927/co_ban_hgoegq.png" alt="Basic" class="w-12 h-12 lg:w-[70px] lg:h-auto object-contain" data-translate-alt="navBasicAlt">
+            </button>
+            <button id="nav-history" class="nav-item">
+                <img src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758007927/lich_su_tkh4qi.png" alt="History" class="w-12 h-12 lg:w-[70px] lg:h-auto object-contain" data-translate-alt="navHistoryAlt">
+            </button>
+            <!-- Settings Modal Button -->
+            <div class="mt-auto pt-4 text-center">
+                <button id="api-key-btn" title="Settings" class="p-3 rounded-2xl hover:bg-[#2D3E50] transition-colors" data-translate-title="apiKeyBtnTitle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+                <div class="text-xs text-gray-500 mt-1 leading-tight">
+                    <p>API key</p>
+                    <p>Language</p>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Controls Panel -->
+        <div class="w-full lg:w-72 flex flex-col gap-4">
+             <!-- Functions & Models -->
+            <div id="controls-container" class="control-section text-gray-800 flex-grow">
+                 <!-- Qwen Controls -->
+                <div id="qwen-options-container" class="hidden flex-col space-y-4">
+                    <div id="aspect-ratio-container">
+                        <label for="aspect-ratio" class="block text-sm font-medium mb-2" data-translate="aspectRatioLabel">Aspect Ratio</label>
+                        <select id="aspect-ratio" class="w-full p-3 focus:ring-2 focus:ring-blue-500 control-select">
+                            <option value="0">1:1</option>
+                            <option value="1">3:4</option>
+                            <option value="2">4:3</option>
+                            <option value="3">9:16</option>
+                            <option value="4">16:9</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="keep-layout-checkbox" type="checkbox" class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-500">
+                        <label for="keep-layout-checkbox" class="ml-2 block text-sm" data-translate="keepLayoutLabel">Keep layout and objects</label>
+                    </div>
+                    <div id="qwen-ref-container" class="flex-col space-y-2 pt-2">
+                        <label class="block text-sm font-medium" data-translate="refImageLabel">Reference Image</label>
+                        <div id="qwen-ref-drop-zone" tabindex="0" class="relative w-full aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer focus:outline-none">
+                            <div id="qwen-ref-upload-prompt" class="text-center pointer-events-none">
+                                 <p class="mt-1 text-xs" data-translate="uploadPrompt">Click, drag & drop, or paste image</p>
+                            </div>
+                            <img id="qwen-ref-preview" class="absolute hidden w-full h-full object-cover rounded-lg">
+                            <button id="remove-qwen-ref-btn" class="absolute -top-2 -right-2 bg-red-600 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-bold hidden z-10">&times;</button>
+                        </div>
+                        <input type="file" id="qwen-ref-file-input" class="hidden" accept="image/*">
+                    </div>
+                    <div class="mt-4">
+                        <img src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569593/qwen-01_a89k6p.jpg" alt="Qwen Illustration" class="w-full h-auto rounded-lg shadow-md">
+                    </div>
+                </div>
+
+                 <!-- Basic Controls -->
+                <div id="controls-basic" class="hidden flex-col space-y-4">
+                    <div>
+                        <label for="processing-mode" class="block text-sm font-medium mb-2" data-translate="functionLabel">Function</label>
+                        <select id="processing-mode" class="w-full p-3 focus:ring-2 focus:ring-blue-500 control-select">
+                            <option value="removebg" data-translate="funcRemoveBg">Remove Background</option>
+                            <option value="mask" data-translate="funcMask">Remove BG (get mask)</option>
+                            <option value="upscale" data-translate="funcUpscale">Upscale Resolution</option>
+                        </select>
+                    </div>
+                    <div id="upscale-controls-basic" style="display: none;">
+                        <label for="upscale-level" class="block text-sm font-medium mb-2" data-translate="upscaleLevelLabel">Level</label>
+                        <select id="upscale-level" class="w-full p-3 focus:ring-2 focus:ring-blue-500 control-select">
+                            <option value="1" selected>x2</option>
+                            <option value="2">x4</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Advanced Controls -->
+                <div id="controls-advanced" class="hidden flex-col space-y-4 h-full">
+                     <div class="flex-grow overflow-y-auto pr-2 space-y-4 max-h-[60vh] lg:max-h-full">
+                        <div>
+                            <label for="processing-mode-advanced" class="block text-sm font-medium mb-2" data-translate="functionLabel">Function</label>
+                            <select id="processing-mode-advanced" class="w-full p-3 focus:ring-2 focus:ring-blue-500 control-select">
+                                <option value="flux_upscale" selected data-translate="funcFluxUpscale">Flux Upscale</option>
+                                <option value="change_bg" data-translate="funcChangeBg">Change Background</option>
+                                <option value="ge_2" data-translate="funcRestoreOldPhoto">Old Photo Restoration</option>
+                                <option value="ge_3" data-translate="funcDeblur">Deblur Image</option>
+                                <option value="ecommerce_process" data-translate="funcEcommerce">E-commerce</option>
+                                <option value="ge_22" data-translate="funcAcneRemoval">Acne Removal, Skin Smoothing</option>
+                                <option value="ge_4" data-translate="funcRetouch">Image Retouch (makeup, brighten)</option>
+                                <option value="ge_8" data-translate="funcHarmonize">Light & Color Harmonization</option>
+                                <option value="light_shadow" data-translate="funcLightShadow">Light and Shadow</option>
+                                <option value="ge_9" data-translate="funcProductRestore">Product Restoration</option>
+                                <option value="ge_10" data-translate="funcChangeClothes">Change Clothes</option>
+                                <option value="ge_14" data-translate="funcExtractClothes">Extract Clothes</option>
+                                <option value="ge_15" data-translate="funcExtractElements">Extract Image Elements</option>
+                                <option value="ge_17" data-translate="funcVectorStyle">Vector Style</option>
+                                <option value="ge_11" data-translate="funcGhibliStyle">Ghibli Anime Style</option>
+                                <option value="ge_18" data-translate="func3DChibi">3D Chibi Style</option>
+                                <option value="ge_19" data-translate="funcWatercolor">Watercolor Style</option>
+                                <option value="ge_20" data-translate="funcChineseArt">Hand-drawn (Chinese style)</option>
+                                <option value="ge_13" data-translate="funcPencilSketch">Sketch Art (pencil)</option>
+                                <option value="ge_12" data-translate="funcLightSketch">Light Sketch</option>
+                                <option value="ge_30" data-translate="funcFridgeMagnet">Fridge Magnets Style</option>
+                            </select>
+                        </div>
+                        <div id="function-preview-container" class="mt-4 hidden">
+                            <img id="function-preview-image" src="" alt="Function Illustration" class="w-full h-auto rounded-lg shadow-md" data-translate-alt="functionPreviewAlt">
+                        </div>
+                        <div id="flux-upscale-controls" class="hidden flex-col space-y-4">
+                            <label for="flux-upscale-model" class="block text-sm font-medium mb-2" data-translate="modelLabel">Model</label>
+                            <select id="flux-upscale-model" class="w-full p-3 focus:ring-2 focus:ring-blue-500 control-select">
+                                <option value="seedvr2" selected>SeedVR2</option>
+                                <option value="realesrgan">RealESRGAN</option>
+                            </select>
+                            <div class="text-base text-gray-600 p-2 bg-gray-100 rounded-md space-y-1">
+                                <p><span class="font-semibold">RealESRGAN:</span> <span data-translate="realEsrganDesc">fast generation but doesn't preserve facial features.</span></p>
+                                <p><span class="font-semibold">SeedVR2:</span> <span data-translate="seedVr2Desc">in-depth generation, better results and higher facial similarity, but takes longer.</span></p>
+                                <p class="mt-1 pt-1 border-t border-gray-200"><span class="font-semibold" data-translate="suggestionLabel">Suggestion:</span> <span data-translate="upscaleSuggestion">If the image is very blurry or contains people, use SeedVR2. For general images, use RealESRGAN for faster results.</span></p>
+                            </div>
+                        </div>
+                         <!-- START: E-commerce Controls -->
+                        <div id="ecommerce-controls" class="hidden flex-col space-y-2">
+                            <label class="block text-sm font-medium" data-translate="effectLabel">Effect</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <img id="effect-shadow" src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759571791/hinh-02_oz1utb.jpg" alt="Drop Shadow" class="w-full h-auto rounded-lg cursor-pointer border-4 border-blue-500 transition-all" data-translate-alt="effectShadowAlt">
+                                    <p class="text-center text-xs mt-1 font-medium" data-translate="effectShadowLabel">Drop Shadow</p>
+                                </div>
+                                <div>
+                                    <img id="effect-mirror" src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759571797/hinh-03_qrfv5k.jpg" alt="Mirror Effect" class="w-full h-auto rounded-lg cursor-pointer border-4 border-transparent transition-all" data-translate-alt="effectMirrorAlt">
+                                    <p class="text-center text-xs mt-1 font-medium" data-translate="effectMirrorLabel">Mirror Effect</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- END: E-commerce Controls -->
+                        <div id="change-bg-controls" class="hidden flex-col space-y-2">
+                            <label class="block text-sm font-medium" data-translate="refBgLabel">Reference Background</label>
+                            <div id="ref-bg-drop-zone" tabindex="0" class="relative w-full aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer focus:outline-none">
+                                <div id="ref-bg-upload-prompt" class="text-center pointer-events-none">
+                                     <p class="mt-1 text-xs" data-translate="uploadPrompt">Click, drag & drop, or paste image</p>
+                                </div>
+                                <img id="ref-bg-preview" class="absolute hidden w-full h-full object-cover rounded-lg">
+                                <button id="remove-ref-bg-btn" class="absolute -top-2 -right-2 bg-red-600 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-bold hidden z-10">&times;</button>
+                            </div>
+                            <input type="file" id="ref-bg-file-input" class="hidden" accept="image/*">
+                        </div>
+                        <div id="ge-8-controls" class="hidden flex-col space-y-2">
+                            <div class="flex items-center mt-2">
+                                <input id="strong-effect-checkbox" type="checkbox" class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-500">
+                                <label for="strong-effect-checkbox" class="ml-2 block text-sm" data-translate="strongEffectLabel">Strong Effect</label>
+                            </div>
+                        </div>
+                        <div id="ge-10-controls" class="hidden flex-col space-y-2">
+                            <label class="block text-sm font-medium" data-translate="clothingImgLabel">Clothing Image</label>
+                            <div id="clothing-img-drop-zone" tabindex="0" class="relative w-full aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer focus:outline-none">
+                                <div id="clothing-img-upload-prompt" class="text-center pointer-events-none">
+                                     <p class="mt-1 text-xs" data-translate="uploadPrompt">Click, drag & drop, or paste image</p>
+                                </div>
+                                <img id="clothing-img-preview" class="absolute hidden w-full h-full object-cover rounded-lg">
+                                <button id="remove-clothing-img-btn" class="absolute -top-2 -right-2 bg-red-600 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-bold hidden z-10">&times;</button>
+                            </div>
+                            <input type="file" id="clothing-img-file-input" class="hidden" accept="image/*">
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Panel: Image Display & Chat -->
+        <div class="flex-1 flex flex-col bg-transparent gap-4 min-h-0">
+            <!-- Image display area -->
+            <div id="display-area" class="flex-1 flex items-center justify-center rounded-2xl p-2 relative overflow-hidden min-h-[50vh] lg:min-h-0" style="background-image: url('https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758008305/nen_gif_wcbayk.gif'); background-size: cover; background-position: center;">
+                <img id="fallback-image" src="https://placehold.co/1024x1024/ffffff/ffffff" alt="Result display area" class="max-w-full max-h-full object-contain opacity-0" data-translate-alt="fallbackImageAlt">
+                
+                <div id="image-compare-container" class="absolute inset-0 w-full h-full">
+                    <img id="original-image-display" src="" alt="Original Image" class="absolute inset-0 w-full h-full object-contain select-none" data-translate-alt="originalImageAlt">
+                    <img id="result-image" src="" alt="Result Image" class="absolute inset-0 w-full h-full object-contain select-none" data-translate-alt="resultImageAlt">
+                    <div id="slider-handle" class="absolute top-0 bottom-0 -ml-4 w-8 h-full cursor-ew-resize z-10" style="left: 50%; display: none;">
+                        <div class="relative w-full h-full">
+                            <div id="slider-icon" class="absolute w-8 h-8 bg-black bg-opacity-60 rounded-full flex items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18m-4 4l4-4m0 0l-4-4"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="corner-hotspot top-0 right-0"> <div id="preview-btn" class="hover-btn animate-from-right" data-translate="previewBtn">Preview</div> </div>
+                <div class="corner-hotspot bottom-0 left-0"> <div id="use-original-btn" class="hover-btn animate-from-left" data-translate="useOriginalBtn">Use Original Image</div> </div>
+                <div class="corner-hotspot bottom-0 right-0 flex flex-col items-end space-y-2">
+                    <div id="use-result-btn" class="hover-btn animate-from-right" data-translate="useResultBtn">Use Result Image</div>
+                    <div id="download-btn" class="hover-btn animate-from-right" data-translate="downloadBtn">Download</div>
+                </div>
+
+                <div id="status-overlay" class="absolute inset-0 hidden z-30">
+                    <img id="loading-bg-image" src="" class="absolute inset-0 w-full h-full object-cover">
+                    <div id="loading-overlay-color" class="absolute inset-0"></div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                        <div id="loading-elements">
+                            <img src="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1755349021/loading_ok_kdesfk.gif" alt="Processing..." class="loading-gif" data-translate-alt="loadingAlt">
+                            <p id="status-message" class="text-lg text-white font-bold mt-4"></p>
+                        </div>
+                        <p id="error-message" class="text-red-400 mt-2 font-semibold"></p>
+                        <button id="close-error-btn" class="mt-4 bg-gray-700 text-white px-4 py-2 rounded-lg hidden hover:bg-gray-600 transition-colors" data-translate="closeBtn">Close</button>
+                    </div>
+                    <div class="absolute bottom-4 right-4 group">
+                        <button id="cancel-btn" class="bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transform transition-all hover:scale-110 focus:outline-none opacity-0 group-hover:opacity-100" title="Cancel Task" data-translate-title="cancelBtnTitle">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prompt input area -->
+            <div id="prompt-container" class="bg-white rounded-2xl p-2 flex items-center space-x-3 shadow-lg">
+                <label for="file-input" class="cursor-pointer p-2 rounded-full bg-[#E5F5FF] hover:bg-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" /></svg>
+                </label>
+                <input type="file" id="file-input" accept="image/*" class="hidden">
+                
+                <div id="image-preview-container" class="relative hidden">
+                    <img id="image-preview" class="h-12 w-12 object-cover rounded-md">
+                    <button id="remove-image-btn" class="absolute -top-1 -right-1 bg-red-600 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-bold">&times;</button>
+                </div>
+
+                <input type="text" id="prompt-input" class="flex-1 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none" placeholder="Enter your prompt..." data-translate-placeholder="promptPlaceholder">
+                
+                <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Preview Modal -->
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50 overflow-hidden">
+         <div id="preview-compare-container" class="absolute inset-0 w-full h-full cursor-grab preview-container">
+            <div id="preview-transform-wrapper" class="absolute" style="transform-origin: 0px 0px;">
+                <img id="preview-original-image" src="" alt="Original image preview" class="absolute max-w-none max-h-none select-none" data-translate-alt="previewOriginalAlt">
+                <img id="preview-result-image" src="" alt="Result image preview" class="absolute max-w-none max-h-none select-none" data-translate-alt="previewResultAlt">
+                <div id="preview-slider-handle" class="absolute top-0 bottom-0 -ml-4 w-8 h-full cursor-ew-resize z-10" style="left: 50%; display: none;">
+                    <div class="relative w-full h-full">
+                        <div id="preview-slider-icon" class="absolute w-8 h-8 bg-black bg-opacity-60 rounded-full flex items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18m-4 4l4-4m0 0l-4-4"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="close-preview-btn" class="absolute top-4 right-4 text-white text-4xl font-bold hover:text-gray-400 transition z-20">&times;</button>
+    </div>
+
+    <!-- History Panel -->
+    <div id="history-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-40">
+        <div id="history-panel" class="absolute top-0 right-0 h-full w-full max-w-md sm:max-w-sm bg-gray-900 shadow-lg p-6 transform translate-x-full">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold" data-translate="historyTitle">Image History</h2>
+                <button id="close-history-btn" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="history-grid" class="grid grid-cols-3 gap-4 overflow-y-auto h-[calc(100%-4rem)]">
+                <!-- History images will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-2xl p-6 shadow-lg w-full max-w-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white" data-translate="apiKeyModalTitle">Settings</h2>
+                <button id="close-api-key-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <p class="text-gray-400 text-sm mb-4" data-translate="apiKeyModalDesc">Your API key will be securely stored in your browser.</p>
+            <input type="password" id="api-key-modal-input" class="w-full bg-[#2D3E50] text-white p-3 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Paste your API key here..." data-translate-placeholder="apiKeyPlaceholder">
+            
+            <!-- Language Selector -->
+            <div class="mt-4">
+                <label for="language-select" class="block text-gray-400 text-sm mb-2" data-translate="languageLabel">Language</label>
+                <select id="language-select" class="w-full bg-[#2D3E50] text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="en">English</option>
+                    <option value="vi">Tiếng Việt</option>
+                </select>
+            </div>
+            
+            <div class="flex justify-end mt-4">
+                <button id="save-api-key-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" data-translate="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ICON URLS ---
+        const ICONS = {
+            advanced: {
+                vi: 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758007927/nang_cao_k6yhkj.png',
+                en: 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759669895/Improve_nngngo.png'
+            },
+            basic: {
+                vi: 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758007927/co_ban_hgoegq.png',
+                en: 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759669895/basic_cuql7h.png'
+            },
+            history: {
+                vi: 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758007927/lich_su_tkh4qi.png',
+                en: 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759669895/history_kxirtt.png'
+            }
+        };
+
+        // --- TRANSLATION DATA ---
+        const translations = {
+            // Navigation
+            navAdvancedAlt: { en: 'Advanced', vi: 'Nâng Cao' },
+            navBasicAlt: { en: 'Basic', vi: 'Cơ Bản' },
+            navHistoryAlt: { en: 'History', vi: 'Lịch Sử' },
+            apiKeyBtnTitle: { en: 'Settings', vi: 'Cài đặt' },
+            // QWEN Controls
+            aspectRatioLabel: { en: 'Aspect Ratio', vi: 'Khung hình' },
+            keepLayoutLabel: { en: 'Keep layout and objects', vi: 'Giữ bố cục và đối tượng' },
+            refImageLabel: { en: 'Reference Image', vi: 'Ảnh tham chiếu' },
+            uploadPrompt: { en: 'Click, drag & drop, or paste image', vi: 'Nhấn, kéo thả hoặc dán ảnh' },
+            // Basic Controls
+            functionLabel: { en: 'Function', vi: 'Chức năng' },
+            funcRemoveBg: { en: 'Remove Background', vi: 'Tách nền' },
+            funcMask: { en: 'Remove BG (get mask)', vi: 'Tách nền lấy mask' },
+            funcUpscale: { en: 'Upscale Resolution', vi: 'Tăng độ phân giải' },
+            upscaleLevelLabel: { en: 'Level', vi: 'Mức độ' },
+            // Advanced Controls
+            funcFluxUpscale: { en: 'Flux Upscale', vi: 'Flux Upscale' },
+            funcChangeBg: { en: 'Change Background', vi: 'Thay nền' },
+            funcRestoreOldPhoto: { en: 'Old Photo Restoration', vi: 'Khôi phục ảnh cũ' },
+            funcDeblur: { en: 'Deblur Image', vi: 'Làm nét ảnh mờ (deblur)' },
+            funcEcommerce: { en: 'E-commerce', vi: 'E-commerce' },
+            funcAcneRemoval: { en: 'Acne Removal, Skin Smoothing', vi: 'Xóa mụn, mịn da' },
+            funcRetouch: { en: 'Image Retouch (makeup, brighten)', vi: 'Chỉnh ảnh (trang điểm, làm sáng)' },
+            funcHarmonize: { en: 'Light & Color Harmonization', vi: 'Hòa trộn đồng bộ ánh sáng' },
+            funcLightShadow: { en: 'Light and Shadow', vi: 'Light and Shadow' },
+            funcProductRestore: { en: 'Product Restoration', vi: 'Phục hồi sản phẩm' },
+            funcChangeClothes: { en: 'Change Clothes', vi: 'Thay trang phục' },
+            funcExtractClothes: { en: 'Extract Clothes', vi: 'Tách trang phục' },
+            funcExtractElements: { en: 'Extract Image Elements', vi: 'Trích xuất hình ảnh' },
+            funcVectorStyle: { en: 'Vector Style', vi: 'Phong cách ảnh vector' },
+            funcGhibliStyle: { en: 'Ghibli Anime Style', vi: 'Ảnh hoạt hình Ghibli' },
+            func3DChibi: { en: '3D Chibi Style', vi: 'Ảnh 3D chibi' },
+            funcWatercolor: { en: 'Watercolor Style', vi: 'Ảnh màu nước' },
+            funcChineseArt: { en: 'Hand-drawn (Chinese style)', vi: 'Ảnh vẽ tay (phong cách Trung Hoa)' },
+            funcPencilSketch: { en: 'Sketch Art (pencil)', vi: 'Tranh biến họa (bút chì)' },
+            funcLightSketch: { en: 'Light Sketch', vi: 'Ảnh phác thảo ánh sáng' },
+            funcFridgeMagnet: { en: 'Fridge Magnets Style', vi: 'Fridge Magnets Style' },
+            functionPreviewAlt: { en: 'Function Illustration', vi: 'Minh họa chức năng' },
+            modelLabel: { en: 'Model', vi: 'Mô hình' },
+            realEsrganDesc: { en: "fast generation but doesn't preserve facial features.", vi: 'thời gian tạo ảnh nhanh nhưng không giữ được nét mặt.' },
+            seedVr2Desc: { en: 'in-depth generation, better results and higher facial similarity, but takes longer.', vi: 'tạo ảnh chuyên sâu, kết quả tốt hơn và khuôn mặt có độ giống cao hơn nhưng thời gian tạo ảnh lâu.' },
+            suggestionLabel: { en: 'Suggestion:', vi: 'Gợi ý:' },
+            upscaleSuggestion: { en: 'If the image is very blurry or contains people, use SeedVR2. For general images, use RealESRGAN for faster results.', vi: 'Nếu ảnh quá mờ hoặc có người thì dùng SeedVR2, còn ảnh thông thường dùng RealESRGAN để tạo ảnh nhanh hơn.' },
+            effectLabel: { en: 'Effect', vi: 'Hiệu ứng' },
+            effectShadowAlt: { en: 'Drop Shadow', vi: 'Bóng đổ' },
+            effectShadowLabel: { en: 'Drop Shadow', vi: 'Bóng đổ' },
+            effectMirrorAlt: { en: 'Mirror Effect', vi: 'Hiệu ứng gương' },
+            effectMirrorLabel: { en: 'Mirror Effect', vi: 'Hiệu ứng gương' },
+            refBgLabel: { en: 'Reference Background', vi: 'Background tham chiếu' },
+            strongEffectLabel: { en: 'Strong Effect', vi: 'Tác động mạnh' },
+            clothingImgLabel: { en: 'Clothing Image', vi: 'Ảnh trang phục' },
+            // Main Display
+            fallbackImageAlt: { en: 'Result display area', vi: 'Vùng hiển thị kết quả' },
+            originalImageAlt: { en: 'Original Image', vi: 'Ảnh gốc' },
+            resultImageAlt: { en: 'Result Image', vi: 'Ảnh kết quả' },
+            previewBtn: { en: 'Preview', vi: 'Preview' },
+            useOriginalBtn: { en: 'Use Original Image', vi: 'Sử dụng ảnh gốc' },
+            useResultBtn: { en: 'Use Result Image', vi: 'Sử dụng ảnh' },
+            downloadBtn: { en: 'Download', vi: 'Tải xuống' },
+            loadingAlt: { en: 'Processing...', vi: 'Đang xử lý...' },
+            closeBtn: { en: 'Close', vi: 'Đóng' },
+            cancelBtnTitle: { en: 'Cancel Task', vi: 'Hủy tác vụ' },
+            promptPlaceholder: { en: 'Enter your prompt...', vi: 'Nhập prompt của bạn...' },
+            // Preview Modal
+            previewOriginalAlt: { en: 'Original image preview', vi: 'Ảnh gốc xem trước' },
+            previewResultAlt: { en: 'Result image preview', vi: 'Ảnh kết quả xem trước' },
+            // History Panel
+            historyTitle: { en: 'Image History', vi: 'Lịch sử ảnh' },
+            historyEmpty: { en: 'No images have been generated yet.', vi: 'Chưa có ảnh nào được tạo.' },
+            // API Key Modal
+            apiKeyModalTitle: { en: 'Settings', vi: 'Cài đặt' },
+            apiKeyModalDesc: { en: 'Your API key will be securely stored in your browser.', vi: 'API key của bạn sẽ được lưu trữ an toàn trong trình duyệt của bạn.' },
+            apiKeyPlaceholder: { en: 'Paste your API key here...', vi: 'Dán API key của bạn vào đây...' },
+            languageLabel: { en: 'Language', vi: 'Ngôn ngữ' },
+            saveBtn: { en: 'Save', vi: 'Lưu' },
+            // JavaScript Messages
+            errorNoApiKey: { en: 'Please enter your API Key to use!', vi: 'Vui lòng nhập API Key của bạn để sử dụng!' },
+            errorImgAndRefRequired: { en: 'This function requires both a main image and a reference image!', vi: 'Chức năng này yêu cầu cả ảnh chính và ảnh tham chiếu!' },
+            errorImgRequired: { en: 'This function requires an image!', vi: 'Chức năng này yêu cầu phải có ảnh!' },
+            errorLayoutRequiresImgAndPrompt: { en: '"Keep layout" function requires both an image and a prompt!', vi: '"Giữ bố cục" yêu cầu cả ảnh và prompt!' },
+            errorProvideInput: { en: 'Please enter a prompt or upload an image!', vi: 'Vui lòng nhập prompt hoặc tải ảnh lên!' },
+            statusUploading: { en: 'Uploading image...', vi: 'Đang tải ảnh lên...' },
+            statusInitializing: { en: 'Initializing task...', vi: 'Đang khởi tạo tác vụ...' },
+            statusProcessing: { en: 'Processing...', vi: 'Đang xử lý...' },
+            statusInQueue: { en: 'In queue...', vi: 'Đang trong hàng đợi...' },
+            statusState: { en: 'Status:', vi: 'Trạng thái:' },
+            statusUnknown: { en: 'Unknown', vi: 'Không xác định' },
+            errorNoInitialImage: { en: 'There is no initial original image to use.', vi: 'Không có ảnh gốc ban đầu để sử dụng.' },
+            errorNoResultImage: { en: 'There is no result image to use.', vi: 'Không có ảnh kết quả để sử dụng.' },
+            statusPreparingImage: { en: 'Preparing image...', vi: 'Đang chuẩn bị ảnh...' },
+            errorLoadResult: { en: 'Failed to load the processed image.', vi: 'Đã xảy ra lỗi khi tải lại ảnh đã xử lý.' },
+            errorDownloadNoImage: { en: 'There is no result image to download.', vi: 'Không có ảnh kết quả để tải xuống.' },
+            errorDownloadFetch: { en: 'Failed to fetch the image for download.', vi: 'Không thể fetch ảnh để tải xuống.' },
+            errorDownloadFailed: { en: 'Download failed.', vi: 'Tải xuống thất bại.' },
+            errorNetwork: { en: 'Network connection lost or cannot connect to the server.', vi: 'Mất kết nối mạng hoặc không thể kết nối đến máy chủ.' },
+            errorInvalidApiKey: { en: 'Invalid or missing API Key. Please check again.', vi: 'API Key không hợp lệ hoặc không tìm thấy. Vui lòng kiểm tra lại.' },
+            errorQueueMaxed: { en: 'The task queue is full. Please try again later.', vi: 'Hàng đợi tác vụ đã đầy. Vui lòng thử lại sau.' },
+            errorTaskRun: { en: 'HTTP Error when running task:', vi: 'Lỗi HTTP khi chạy tác vụ:' },
+            errorTaskStart: { en: 'API failed to start task:', vi: 'API không khởi động được tác vụ:' },
+            errorNoTaskId: { en: 'Did not receive Task ID', vi: 'Không nhận được Task ID' },
+            errorCheckStatus: { en: 'Error checking status:', vi: 'Lỗi kiểm tra trạng thái:' },
+            errorApiStatus: { en: 'API status error:', vi: 'Lỗi API trạng thái:' },
+            errorTaskFailed: { en: 'Task failed on server.', vi: 'Tác vụ thất bại trên server.' },
+            errorFetchResult: { en: 'Error fetching result:', vi: 'Lỗi lấy kết quả:' },
+            errorApiResult: { en: 'API error:', vi: 'API báo lỗi:' },
+            errorNoResultData: { en: 'API did not return result data.', vi: 'API không trả về dữ liệu kết quả.' },
+            errorNoImageInResult: { en: 'No image found in the returned result.', vi: 'Không tìm thấy hình ảnh trong kết quả trả về.' },
+            errorCancel: { en: 'API error when canceling task:', vi: 'API báo lỗi khi hủy tác vụ:' },
+            errorUnknown: { en: 'An unknown error occurred.', vi: 'Lỗi không xác định.' },
+        };
+        
+        // --- DOM ELEMENTS ---
+        const displayArea = document.getElementById('display-area');
+        const fallbackImage = document.getElementById('fallback-image');
+        const imageCompareContainer = document.getElementById('image-compare-container');
+        const originalImageDisplay = document.getElementById('original-image-display');
+        const resultImage = document.getElementById('result-image');
+        const sliderHandle = document.getElementById('slider-handle');
+        const sliderIcon = document.getElementById('slider-icon');
+        
+        const statusOverlay = document.getElementById('status-overlay');
+        const statusMessage = document.getElementById('status-message');
+        const errorMessage = document.getElementById('error-message');
+        const loadingBgImage = document.getElementById('loading-bg-image');
+        const loadingOverlayColor = document.getElementById('loading-overlay-color');
+        const cancelBtn = document.getElementById('cancel-btn'); 
+        const loadingElements = document.getElementById('loading-elements');
+        const closeErrorBtn = document.getElementById('close-error-btn');
+        
+        const promptContainer = document.getElementById('prompt-container');
+        const fileInput = document.getElementById('file-input');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const removeImageBtn = document.getElementById('remove-image-btn');
+        const promptInput = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-btn');
+        const processingModeSelect = document.getElementById('processing-mode');
+        const processingModeSelectAdvanced = document.getElementById('processing-mode-advanced');
+        const aspectRatioContainer = document.getElementById('aspect-ratio-container');
+        const aspectRatioSelect = document.getElementById('aspect-ratio');
+        const upscaleControlsBasic = document.getElementById('upscale-controls-basic');
+        const keepLayoutCheckbox = document.getElementById('keep-layout-checkbox');
+        
+        // Nav Elements
+        const navQwen = document.getElementById('nav-qwen');
+        const navBasic = document.getElementById('nav-basic');
+        const navAdvanced = document.getElementById('nav-advanced');
+        const navHistory = document.getElementById('nav-history');
+        const navAdvancedImg = document.querySelector('#nav-advanced img');
+        const navBasicImg = document.querySelector('#nav-basic img');
+        const navHistoryImg = document.querySelector('#nav-history img');
+        const apiKeyBtn = document.getElementById('api-key-btn');
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const closeApiKeyModal = document.getElementById('close-api-key-modal');
+        const apiKeyModalInput = document.getElementById('api-key-modal-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const languageSelect = document.getElementById('language-select');
+
+        const controlsContainer = document.getElementById('controls-container');
+        const qwenOptionsContainer = document.getElementById('qwen-options-container');
+        const controlsBasic = document.getElementById('controls-basic');
+        const controlsAdvanced = document.getElementById('controls-advanced');
+        const functionPreviewContainer = document.getElementById('function-preview-container');
+        const functionPreviewImage = document.getElementById('function-preview-image');
+        const fluxUpscaleControls = document.getElementById('flux-upscale-controls');
+        const ge8Controls = document.getElementById('ge-8-controls'); 
+        
+        const changeBgControls = document.getElementById('change-bg-controls');
+        const refBgDropZone = document.getElementById('ref-bg-drop-zone');
+        const refBgFileInput = document.getElementById('ref-bg-file-input');
+        const refBgPreview = document.getElementById('ref-bg-preview');
+        const refBgUploadPrompt = document.getElementById('ref-bg-upload-prompt');
+        const removeRefBgBtn = document.getElementById('remove-ref-bg-btn');
+
+        const ge10Controls = document.getElementById('ge-10-controls');
+        const clothingImgDropZone = document.getElementById('clothing-img-drop-zone');
+        const clothingImgFileInput = document.getElementById('clothing-img-file-input');
+        const clothingImgPreview = document.getElementById('clothing-img-preview');
+        const clothingImgUploadPrompt = document.getElementById('clothing-img-upload-prompt');
+        const removeClothingImgBtn = document.getElementById('remove-clothing-img-btn');
+
+        // Qwen Reference Image Elements
+        const qwenRefContainer = document.getElementById('qwen-ref-container');
+        const qwenRefDropZone = document.getElementById('qwen-ref-drop-zone');
+        const qwenRefFileInput = document.getElementById('qwen-ref-file-input');
+        const qwenRefPreview = document.getElementById('qwen-ref-preview');
+        const qwenRefUploadPrompt = document.getElementById('qwen-ref-upload-prompt');
+        const removeQwenRefBtn = document.getElementById('remove-qwen-ref-btn');
+        
+        // E-commerce Elements
+        const ecommerceControls = document.getElementById('ecommerce-controls');
+        const effectShadow = document.getElementById('effect-shadow');
+        const effectMirror = document.getElementById('effect-mirror');
+
+        const previewBtn = document.getElementById('preview-btn');
+        const useResultBtn = document.getElementById('use-result-btn');
+        const useOriginalBtn = document.getElementById('use-original-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const previewModal = document.getElementById('preview-modal');
+        const previewCompareContainer = document.getElementById('preview-compare-container');
+        const previewTransformWrapper = document.getElementById('preview-transform-wrapper');
+        const previewOriginalImage = document.getElementById('preview-original-image');
+        const previewResultImage = document.getElementById('preview-result-image');
+        const previewSliderHandle = document.getElementById('preview-slider-handle');
+        const previewSliderIcon = document.getElementById('preview-slider-icon');
+        const closePreviewBtn = document.getElementById('close-preview-btn');
+        
+        const historyModal = document.getElementById('history-modal');
+        const historyPanel = document.getElementById('history-panel');
+        const closeHistoryBtn = document.getElementById('close-history-btn');
+        const historyGrid = document.getElementById('history-grid');
+
+        // --- STATE MANAGEMENT ---
+        let uploadedImageFile = null;
+        let initialUploadedImageFile = null;
+        let originalImageUrl = null;
+        let referenceBgFile = null;
+        let referenceBgUrl = null;
+        let clothingImageFile = null;
+        let clothingImageUrl = null;
+        let qwenReferenceFile = null;
+        let qwenReferenceUrl = null;
+        let activeProcessingMode = 'qwen'; 
+        let imageHistory = [];
+        let selectedEcommerceEffect = 1; // 1 for shadow, 2 for mirror
+        
+        let currentTaskId = null;
+        let statusInterval = null;
+        let userApiKey = localStorage.getItem('userApiKey') || '';
+        let currentLanguage = localStorage.getItem('appLanguage') || 'vi';
+
+        const previewImages = {
+            'flux_upscale': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570520/tang_net-min_y7fvbl.gif',
+            'change_bg': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570523/thay_nen-min_vg2ydo.gif',
+            'ge_2': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569598/phuc_che_qi0xo4.gif',
+            'ge_3': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570516/delur-min_qhym2u.gif',
+            'ge_22': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759572561/xoa_mun-min_wafsy0.gif',
+            'ge_4': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569590/makup_qjvzhf.gif',
+            'ge_8': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570316/blend-min_lp2igk.gif',
+            'light_shadow': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570987/light_and_shadow-min_szjbl5.gif',
+            'ge_9': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570530/san_pham-min_wgc42q.gif',
+            'ge_10': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759648069/thay_trang_phuc4-01_wj35jq.jpg',
+            'ge_14': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650925/tach_trang_phuc-min_ibyn7g.gif',
+            'ge_15': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759651988/trich_xuat_rnrczq.gif',
+            'ge_17': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/vector-min_cxcwgg.gif',
+            'ge_11': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650961/hoat_hinh-min_um3thj.gif',
+            'ge_18': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/3d_chibi-min_cfe0go.gif',
+            'ge_19': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650927/mau_nuoc-min_qj1vio.gif',
+            'ge_20': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/tranh_trung_quoc-min_dt6rr2.gif',
+            'ge_13': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759649540/bien_hoa_nyhsqy.gif',
+            'ge_12': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650925/anh_sang-min_thfoit.gif',
+            'ge_30': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650928/vien_vang-min_pdenyl.gif'
+        };
+
+        // --- LANGUAGE/TRANSLATION LOGIC ---
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('appLanguage', lang);
+            document.documentElement.lang = lang;
+            languageSelect.value = lang;
+
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.dataset.translate;
+                if (translations[key] && translations[key][lang]) {
+                    el.textContent = translations[key][lang];
+                }
+            });
+
+            document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+                const key = el.dataset.translatePlaceholder;
+                if (translations[key] && translations[key][lang]) {
+                    el.placeholder = translations[key][lang];
+                }
+            });
+
+            document.querySelectorAll('[data-translate-title]').forEach(el => {
+                const key = el.dataset.translateTitle;
+                if (translations[key] && translations[key][lang]) {
+                    el.title = translations[key][lang];
+                }
+            });
+            
+             document.querySelectorAll('[data-translate-alt]').forEach(el => {
+                const key = el.dataset.translateAlt;
+                if (translations[key] && translations[key][lang]) {
+                    el.alt = translations[key][lang];
+                }
+            });
+            
+            // Update icons based on language
+            navAdvancedImg.src = ICONS.advanced[lang];
+            navBasicImg.src = ICONS.basic[lang];
+            navHistoryImg.src = ICONS.history[lang];
+        }
+
+        languageSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+
+        // --- UI LOGIC ---
+        function switchView(activeView) {
+            navQwen.classList.remove('active');
+            navBasic.classList.remove('active');
+            navAdvanced.classList.remove('active');
+
+            qwenOptionsContainer.style.display = 'none';
+            controlsBasic.style.display = 'none';
+            controlsAdvanced.style.display = 'none';
+            functionPreviewContainer.style.display = 'none';
+
+            if (activeView === 'qwen') {
+                navQwen.classList.add('active');
+                qwenOptionsContainer.style.display = 'flex';
+                activeProcessingMode = 'qwen';
+            } else if (activeView === 'basic') {
+                navBasic.classList.add('active');
+                controlsBasic.style.display = 'flex';
+                activeProcessingMode = processingModeSelect.value;
+            } else if (activeView === 'advanced') {
+                navAdvanced.classList.add('active');
+                controlsAdvanced.style.display = 'flex';
+                activeProcessingMode = processingModeSelectAdvanced.value;
+            }
+            updateControlsUI();
+        }
+
+        function updateFunctionPreview(mode) {
+            const imageUrl = previewImages[mode];
+            if (imageUrl) {
+                functionPreviewImage.src = imageUrl;
+                functionPreviewContainer.style.display = 'block';
+            } else {
+                functionPreviewContainer.style.display = 'none';
+            }
+        }
+
+        function updateControlsUI() {
+            aspectRatioContainer.style.display = 'none';
+            upscaleControlsBasic.style.display = 'none';
+            fluxUpscaleControls.style.display = 'none';
+            changeBgControls.style.display = 'none';
+            ge8Controls.style.display = 'none';
+            ge10Controls.style.display = 'none';
+            ecommerceControls.style.display = 'none'; 
+
+            if (activeProcessingMode === 'qwen') {
+                if (keepLayoutCheckbox.checked) {
+                    aspectRatioContainer.style.display = 'none';
+                } else {
+                    aspectRatioContainer.style.display = 'block';
+                }
+            } else if (activeProcessingMode === 'upscale') {
+                upscaleControlsBasic.style.display = 'block';
+            } else if (activeProcessingMode === 'flux_upscale') {
+                fluxUpscaleControls.style.display = 'flex';
+            } else if (activeProcessingMode === 'change_bg') {
+                changeBgControls.style.display = 'flex';
+            } else if (activeProcessingMode === 'ge_10') {
+                ge10Controls.style.display = 'flex';
+            } else if (activeProcessingMode === 'ecommerce_process') {
+                ecommerceControls.style.display = 'flex';
+            }
+
+            if (navAdvanced.classList.contains('active')) {
+                updateFunctionPreview(activeProcessingMode);
+            } else {
+                functionPreviewContainer.style.display = 'none';
+            }
+        }
+        
+        function handleModeChange(event) {
+            activeProcessingMode = event.target.value;
+            updateControlsUI();
+        }
+
+        navQwen.addEventListener('click', () => switchView('qwen'));
+        navBasic.addEventListener('click', () => switchView('basic'));
+        navAdvanced.addEventListener('click', () => switchView('advanced'));
+        processingModeSelect.addEventListener('change', handleModeChange);
+        processingModeSelectAdvanced.addEventListener('change', handleModeChange);
+        keepLayoutCheckbox.addEventListener('change', updateControlsUI);
+        
+        // --- IMAGE UPLOAD LOGIC ---
+        function handleFileSelect(file, isFromUserInput = false) {
+            if (!file || !file.type.startsWith('image/')) return;
+            if (isFromUserInput) initialUploadedImageFile = file;
+            uploadedImageFile = file;
+            if (originalImageUrl && originalImageUrl.startsWith('blob:')) URL.revokeObjectURL(originalImageUrl);
+            originalImageUrl = URL.createObjectURL(file);
+            imagePreview.src = originalImageUrl;
+            imagePreviewContainer.style.display = 'block';
+            originalImageDisplay.src = originalImageUrl;
+            resultImage.src = '';
+            resultImage.style.display = 'none'; 
+            sliderHandle.style.display = 'none';
+            originalImageDisplay.style.clipPath = 'none'; 
+            imageCompareContainer.classList.remove('dragging');
+            fallbackImage.style.display = 'none';
+            imageCompareContainer.style.display = 'block';
+        }
+        
+        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0], true));
+        promptContainer.addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.style.backgroundColor = '#e0e0e0'; });
+        promptContainer.addEventListener('dragleave', (e) => { e.currentTarget.style.backgroundColor = 'white'; });
+        promptContainer.addEventListener('drop', (e) => { e.preventDefault(); e.currentTarget.style.backgroundColor = 'white'; handleFileSelect(e.dataTransfer.files[0], true); });
+        window.addEventListener('paste', (e) => {
+            if (document.activeElement !== refBgDropZone && document.activeElement !== clothingImgDropZone && document.activeElement !== qwenRefDropZone) {
+                for (const item of e.clipboardData.items) {
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        handleFileSelect(item.getAsFile(), true);
+                        break;
+                    }
+                }
+            }
+        });
+        removeImageBtn.addEventListener('click', () => { uploadedImageFile = null; initialUploadedImageFile = null; if (originalImageUrl && originalImageUrl.startsWith('blob:')) URL.revokeObjectURL(originalImageUrl); originalImageUrl = null; fileInput.value = ''; imagePreviewContainer.style.display = 'none'; imageCompareContainer.style.display = 'none'; fallbackImage.style.display = 'block'; });
+
+        function setupDropZone(dropZone, fileInput, previewImg, uploadPrompt, removeBtn, fileHandler) {
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => fileHandler(e.target.files[0]));
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drop-zone-active'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-zone-active'));
+            dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drop-zone-active'); if (e.dataTransfer.files.length > 0) fileHandler(e.dataTransfer.files[0]); });
+            dropZone.addEventListener('paste', (e) => { e.stopPropagation(); for (const item of e.clipboardData.items) { if (item.kind === 'file' && item.type.startsWith('image/')) { fileHandler(item.getAsFile()); break; } } });
+            removeBtn.addEventListener('click', (e) => { e.stopPropagation(); fileHandler(null); fileInput.value = ''; });
+        }
+
+        function handleReferenceBgFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                referenceBgFile = file;
+                if (referenceBgUrl) URL.revokeObjectURL(referenceBgUrl);
+                referenceBgUrl = URL.createObjectURL(file);
+                refBgPreview.src = referenceBgUrl;
+                refBgPreview.style.display = 'block';
+                refBgUploadPrompt.style.display = 'none';
+                removeRefBgBtn.style.display = 'flex';
+            } else {
+                referenceBgFile = null;
+                if (referenceBgUrl) URL.revokeObjectURL(referenceBgUrl);
+                referenceBgUrl = null;
+                refBgPreview.src = '';
+                refBgPreview.style.display = 'none';
+                refBgUploadPrompt.style.display = 'block';
+                removeRefBgBtn.style.display = 'none';
+            }
+        }
+        setupDropZone(refBgDropZone, refBgFileInput, refBgPreview, refBgUploadPrompt, removeRefBgBtn, handleReferenceBgFileSelect);
+        
+        function handleClothingImageFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                clothingImageFile = file;
+                if (clothingImageUrl) URL.revokeObjectURL(clothingImageUrl);
+                clothingImageUrl = URL.createObjectURL(file);
+                clothingImgPreview.src = clothingImageUrl;
+                clothingImgPreview.style.display = 'block';
+                clothingImgUploadPrompt.style.display = 'none';
+                removeClothingImgBtn.style.display = 'flex';
+            } else {
+                 clothingImageFile = null;
+                if (clothingImageUrl) URL.revokeObjectURL(clothingImageUrl);
+                clothingImageUrl = null;
+                clothingImgPreview.src = '';
+                clothingImgPreview.style.display = 'none';
+                clothingImgUploadPrompt.style.display = 'block';
+                removeClothingImgBtn.style.display = 'none';
+            }
+        }
+        setupDropZone(clothingImgDropZone, clothingImgFileInput, clothingImgPreview, clothingImgUploadPrompt, removeClothingImgBtn, handleClothingImageFileSelect);
+
+        function handleQwenRefFileSelect(file) {
+             if (file && file.type.startsWith('image/')) {
+                qwenReferenceFile = file;
+                if (qwenReferenceUrl) URL.revokeObjectURL(qwenReferenceUrl);
+                qwenReferenceUrl = URL.createObjectURL(file);
+                qwenRefPreview.src = qwenReferenceUrl;
+                qwenRefPreview.style.display = 'block';
+                qwenRefUploadPrompt.style.display = 'none';
+                removeQwenRefBtn.style.display = 'flex';
+            } else {
+                qwenReferenceFile = null;
+                if (qwenReferenceUrl) URL.revokeObjectURL(qwenReferenceUrl);
+                qwenReferenceUrl = null;
+                qwenRefPreview.src = '';
+                qwenRefPreview.style.display = 'none';
+                qwenRefUploadPrompt.style.display = 'block';
+                removeQwenRefBtn.style.display = 'none';
+            }
+        }
+        setupDropZone(qwenRefDropZone, qwenRefFileInput, qwenRefPreview, qwenRefUploadPrompt, removeQwenRefBtn, handleQwenRefFileSelect);
+
+        // E-commerce effect selection logic
+        effectShadow.addEventListener('click', () => {
+            selectedEcommerceEffect = 1;
+            effectShadow.classList.replace('border-transparent', 'border-blue-500');
+            effectMirror.classList.replace('border-blue-500', 'border-transparent');
+        });
+
+        effectMirror.addEventListener('click', () => {
+            selectedEcommerceEffect = 2;
+            effectMirror.classList.replace('border-transparent', 'border-blue-500');
+            effectShadow.classList.replace('border-blue-500', 'border-transparent');
+        });
+
+        // --- CORE API LOGIC ---
+        sendBtn.addEventListener('click', handleImageProcessing);
+        promptInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleImageProcessing(); } });
+        cancelBtn.addEventListener('click', cancelTask);
+        closeErrorBtn.addEventListener('click', () => { statusOverlay.style.display = 'none'; });
+
+        // API Key Modal Logic
+        apiKeyBtn.addEventListener('click', () => {
+            apiKeyModalInput.value = userApiKey;
+            languageSelect.value = currentLanguage;
+            apiKeyModal.classList.remove('hidden');
+        });
+
+        function closeApiKeyModalFunc() {
+            apiKeyModal.classList.add('hidden');
+        }
+
+        closeApiKeyModal.addEventListener('click', closeApiKeyModalFunc);
+        
+        apiKeyModal.addEventListener('click', (e) => {
+            if (e.target === apiKeyModal) {
+                closeApiKeyModalFunc();
+            }
+        });
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            userApiKey = apiKeyModalInput.value.trim();
+            localStorage.setItem('userApiKey', userApiKey);
+            const selectedLang = languageSelect.value;
+            if (selectedLang !== currentLanguage) {
+                setLanguage(selectedLang);
+            }
+            closeApiKeyModalFunc();
+        });
+
+        apiKeyModalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveApiKeyBtn.click();
+            }
+        });
+
+        function resetState() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+            currentTaskId = null;
+            setUiLoading(false);
+        }
+
+        function showUserError(message) {
+            statusOverlay.style.display = 'flex'; 
+            loadingElements.style.display = 'none';
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            closeErrorBtn.style.display = 'block';
+            if (!loadingBgImage.src || loadingBgImage.src.includes('placehold.co')) {
+                 loadingBgImage.style.display = 'none';
+                 loadingOverlayColor.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+            }
+        }
+        
+        function setUiLoading(isLoading, message = '') {
+            if (isLoading) {
+                statusMessage.textContent = message;
+                errorMessage.textContent = '';
+                loadingElements.style.display = 'block';
+                errorMessage.style.display = 'none';
+                closeErrorBtn.style.display = 'none';
+                
+                if (originalImageUrl) {
+                    loadingBgImage.src = originalImageUrl;
+                    loadingBgImage.style.display = 'block';
+                    loadingOverlayColor.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                } else {
+                    loadingBgImage.style.display = 'none';
+                    loadingOverlayColor.style.backgroundColor = 'rgb(30, 30, 30)';
+                }
+                statusOverlay.style.display = 'flex'; 
+            } else {
+                statusOverlay.style.display = 'none';
+            }
+        }
+        
+        function parseApiError(error, status = null) {
+            let msg = error.message || translations.errorUnknown[currentLanguage];
+            
+            if (msg.includes('Failed to fetch')) {
+                return translations.errorNetwork[currentLanguage];
+            }
+            
+            if (status === 401 || status === 403 || (msg && msg.toLowerCase().includes('invalid api key')) || msg.includes('APIKEY_USER_NOT_FOUND')) {
+                return translations.errorInvalidApiKey[currentLanguage];
+            }
+
+            if (msg.includes('ASK_QUEUE_MAXED')) {
+                return translations.errorQueueMaxed[currentLanguage];
+            }
+
+            return msg; // Return original message if no specific translation matches
+        }
+
+        async function uploadToRunningHub(imageFile) {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            formData.append('apiKey', userApiKey);
+            formData.append('fileType', 'image');
+            
+            const uploadUrl = 'https://www.runninghub.ai/task/openapi/upload';
+            const response = await fetch(uploadUrl, { method: 'POST', body: formData });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ msg: `${translations.errorTaskRun[currentLanguage]} ${response.status}` }));
+                throw new Error(parseApiError({ message: errorData.msg }, response.status));
+            }
+            
+            const data = await response.json();
+            if (data.code !== 0 || !data.data || !data.data.fileName) {
+                throw new Error(parseApiError({ message: data.msg || translations.errorUnknown[currentLanguage] }, response.status));
+            }
+            
+            return data.data.fileName;
+        }
+        
+        async function handleImageProcessing() {
+            resetState();
+            
+            if (!userApiKey) {
+                showUserError(translations.errorNoApiKey[currentLanguage]);
+                return;
+            }
+
+            const selectedMode = activeProcessingMode;
+            const promptText = promptInput.value.trim();
+            const keepLayout = keepLayoutCheckbox.checked;
+
+            const imageRequiredModes = ['removebg', 'mask', 'upscale', 'flux_upscale', 'light_shadow', 'change_bg', 'ecommerce_process'];
+            if (selectedMode.startsWith('ge_')) imageRequiredModes.push(selectedMode);
+            
+            if (selectedMode === 'qwen' && qwenReferenceFile && !uploadedImageFile) { showUserError(translations.errorImgAndRefRequired[currentLanguage]); return; }
+            if (!uploadedImageFile && imageRequiredModes.includes(selectedMode)) { showUserError(translations.errorImgRequired[currentLanguage]); return; }
+            if (selectedMode === 'qwen' && keepLayout && (!uploadedImageFile || !promptText)) { showUserError(translations.errorLayoutRequiresImgAndPrompt[currentLanguage]); return; }
+            if (selectedMode === 'qwen' && !keepLayout && !uploadedImageFile && !promptText && !qwenReferenceFile) { showUserError(translations.errorProvideInput[currentLanguage]); return; }
+            
+            setUiLoading(true, translations.statusUploading[currentLanguage]);
+            try {
+                const uploadPromises = [];
+                if (uploadedImageFile) uploadPromises.push(uploadToRunningHub(uploadedImageFile));
+                if (selectedMode === 'change_bg' && referenceBgFile) uploadPromises.push(uploadToRunningHub(referenceBgFile));
+                if (selectedMode === 'ge_10' && clothingImageFile) uploadPromises.push(uploadToRunningHub(clothingImageFile));
+                if (selectedMode === 'qwen' && qwenReferenceFile) uploadPromises.push(uploadToRunningHub(qwenReferenceFile));
+                
+                const uploadedUrls = await Promise.all(uploadPromises);
+
+                let urlIndex = 0;
+                let imageUrlForApi = uploadedImageFile ? uploadedUrls[urlIndex++] : null;
+                let referenceBgUrlForApi = (selectedMode === 'change_bg' && referenceBgFile) ? uploadedUrls[urlIndex++] : null;
+                let clothingImageUrlForApi = (selectedMode === 'ge_10' && clothingImageFile) ? uploadedUrls[urlIndex++] : null;
+                let qwenRefUrlForApi = (selectedMode === 'qwen' && qwenReferenceFile) ? uploadedUrls[urlIndex++] : null;
+
+                setUiLoading(true, translations.statusInitializing[currentLanguage]);
+                let webappId, nodeInfoList;
+                
+                 if (selectedMode.startsWith('ge_')) {
+                    if (selectedMode === 'ge_8') {
+                        webappId = "1973954014482141186";
+                        nodeInfoList = [{
+                            "nodeId": "22", "fieldName": "image", "fieldValue": imageUrlForApi
+                        }];
+                    } else if (selectedMode === 'ge_2') {
+                        webappId = "1973579606852767746";
+                        nodeInfoList = [{"nodeId": "64", "fieldName": "image", "fieldValue": imageUrlForApi}];
+                    } else if (selectedMode === 'ge_10' && clothingImageFile && clothingImageUrlForApi) {
+                        webappId = "1967543086240948226";
+                        nodeInfoList = [
+                            { nodeId: "562", fieldName: "image", fieldValue: imageUrlForApi },
+                            { nodeId: "563", fieldName: "image", fieldValue: clothingImageUrlForApi }
+                        ];
+                    } else {
+                        webappId = "1956669205624053761";
+                        let modeValue = selectedMode.split('_')[1];
+                        nodeInfoList = [
+                            { nodeId: "41", fieldName: "image", fieldValue: imageUrlForApi }, 
+                            { nodeId: "32", fieldName: "value", fieldValue: modeValue }, 
+                            { nodeId: "33", fieldName: "text", fieldValue: promptText }
+                        ];
+                    }
+                } else {
+                    switch (selectedMode) {
+                        case 'qwen':
+                            if (qwenReferenceFile && qwenRefUrlForApi && imageUrlForApi) {
+                                webappId = "1971891903639842817";
+                                nodeInfoList = [
+                                    { nodeId: "230", fieldName: "image", fieldValue: imageUrlForApi },
+                                    { nodeId: "234", fieldName: "image", fieldValue: qwenRefUrlForApi },
+                                    { nodeId: "258", fieldName: "text", fieldValue: promptText }
+                                ];
+                            } else if (keepLayout) {
+                                webappId = "1969316411724230657";
+                                nodeInfoList = [
+                                    { nodeId: "107", fieldName: "image", fieldValue: imageUrlForApi },
+                                    { nodeId: "199", fieldName: "text", fieldValue: promptText }
+                                ];
+                            } else {
+                                webappId = "1958148065536462850";
+                                nodeInfoList = [
+                                    { nodeId: "159", fieldName: "value", fieldValue: imageUrlForApi ? "1" : "0" },
+                                    { nodeId: "156", fieldName: "value", fieldValue: aspectRatioSelect.value },
+                                    { nodeId: "147", fieldName: "text", fieldValue: promptText }
+                                ];
+                                if (imageUrlForApi) nodeInfoList.push({ nodeId: "115", fieldName: "image", fieldValue: imageUrlForApi });
+                            }
+                            break;
+                        case 'ecommerce_process':
+                            webappId = "1972971898822897665";
+                            nodeInfoList = [
+                                { nodeId: "84", fieldName: "image", fieldValue: imageUrlForApi },
+                                { nodeId: "98", fieldName: "value", fieldValue: selectedEcommerceEffect.toString() }
+                            ];
+                            break;
+                        case 'removebg': case 'mask': webappId = "1956204712976678913"; let modeValue = (selectedMode === 'removebg') ? '1' : '2'; nodeInfoList = [ { nodeId: "28", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "77", fieldName: "value", fieldValue: modeValue } ]; break;
+                        case 'upscale': webappId = "1957633371671293954"; nodeInfoList = [ { nodeId: "1", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "11", fieldName: "value", fieldValue: document.getElementById('upscale-level').value } ]; break;
+                        case 'flux_upscale':
+                            const fluxModel = document.getElementById('flux-upscale-model').value;
+                            webappId = (fluxModel === 'realesrgan') ? "1965717590683353089" : "1955475385950486530";
+                            nodeInfoList = (fluxModel === 'realesrgan') ? [{ nodeId: "33", fieldName: "image", fieldValue: imageUrlForApi }] : [{ nodeId: "6", fieldName: "image", fieldValue: imageUrlForApi }];
+                            break;
+                        case 'change_bg': if (referenceBgFile && referenceBgUrlForApi) { webappId = "1961706336507641857"; nodeInfoList = [{ nodeId: "49", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "245", fieldName: "image", fieldValue: referenceBgUrlForApi }]; } else { webappId = "1956669205624053761"; nodeInfoList = [{ nodeId: "41", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "32", fieldName: "value", fieldValue: "16" }, { nodeId: "33", fieldName: "text", fieldValue: promptText }]; } break;
+                        case 'light_shadow': webappId = "1960150976252555265"; nodeInfoList = [{ nodeId: "47", fieldName: "image", fieldValue: imageUrlForApi }]; break;
+                    }
+                }
+                const runPayload = { webappId, apiKey: userApiKey, nodeInfoList };
+                const runUrl = 'https://www.runninghub.ai/task/openapi/ai-app/run';
+                const runResponse = await fetch(runUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runPayload) });
+
+                if (!runResponse.ok) {
+                    const errorData = await runResponse.json().catch(() => ({ msg: `${translations.errorTaskRun[currentLanguage]} ${runResponse.statusText}` }));
+                     throw new Error(parseApiError({ message: errorData.msg }, runResponse.status));
+                }
+                
+                const runResult = await runResponse.json();
+                if (runResult.code !== 0 || !runResult.data.taskId) {
+                     throw new Error(parseApiError({ message: `${translations.errorTaskStart[currentLanguage]} ${runResult.msg || translations.errorNoTaskId[currentLanguage]}` }, runResponse.status));
+                }
+                currentTaskId = runResult.data.taskId;
+
+                setUiLoading(true, translations.statusProcessing[currentLanguage]);
+                statusInterval = setInterval(checkTaskStatus, 3000);
+            } catch (error) {
+                console.error('Processing error:', error);
+                showUserError(error.message);
+            }
+        }
+        
+        async function checkTaskStatus() {
+            const taskIdToCheck = currentTaskId;
+            if (!taskIdToCheck) {
+                if (statusInterval) clearInterval(statusInterval);
+                statusInterval = null;
+                return;
+            }
+
+            try {
+                const statusUrl = 'https://www.runninghub.ai/task/openapi/status';
+                const payload = { apiKey: userApiKey, taskId: taskIdToCheck };
+                const response = await fetch(statusUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+                if (currentTaskId !== taskIdToCheck) {
+                    return; 
+                }
+
+                if (!response.ok) {
+                     const errorData = await response.json().catch(() => ({ msg: `${translations.errorCheckStatus[currentLanguage]} ${response.statusText}` }));
+                     throw new Error(parseApiError({ message: errorData.msg }, response.status));
+                }
+                
+                const result = await response.json();
+                if (result.code !== 0) {
+                     throw new Error(parseApiError({ message: `${translations.errorApiStatus[currentLanguage]} ${result.msg}` }, response.status));
+                }
+
+                const statusData = result.data || {};
+                const status = typeof statusData === 'string' ? statusData : statusData.status;
+
+                switch (status) {
+                    case 'SUCCESS':
+                        clearInterval(statusInterval);
+                        statusInterval = null;
+                        fetchTaskOutput(taskIdToCheck); 
+                        break;
+                    case 'RUNNING': case 'PROCESSING':
+                        const progress = statusData.progress ? Math.round(statusData.progress * 100) : 0;
+                        setUiLoading(true, `${translations.statusProcessing[currentLanguage]} ${progress > 0 ? progress + '%' : ''}`);
+                        break;
+                    case 'IN_QUEUE': setUiLoading(true, translations.statusInQueue[currentLanguage]); break;
+                    case 'FAILED':
+                        clearInterval(statusInterval);
+                        statusInterval = null;
+                        throw new Error(parseApiError({ message: statusData.failReason || translations.errorTaskFailed[currentLanguage] }));
+                    default:
+                        setUiLoading(true, `${translations.statusState[currentLanguage]} ${status || translations.statusUnknown[currentLanguage]}`);
+                        break;
+                }
+            } catch (error) {
+                console.error('Status check error:', error);
+                if (currentTaskId === taskIdToCheck) {
+                    showUserError(error.message);
+                    if (statusInterval) clearInterval(statusInterval);
+                    statusInterval = null;
+                }
+            }
+        }
+
+        async function fetchTaskOutput(taskId) {
+            try {
+                const outputUrl = 'https://www.runninghub.ai/task/openapi/outputs';
+                const payload = { apiKey: userApiKey, taskId: taskId };
+                const response = await fetch(outputUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ msg: `${translations.errorFetchResult[currentLanguage]} ${response.statusText}` }));
+                    throw new Error(parseApiError({ message: errorData.msg }, response.status));
+                }
+                
+                const result = await response.json();
+                if (result.code !== 0) throw new Error(parseApiError({ message: `${translations.errorApiResult[currentLanguage]} ${result.msg || translations.errorUnknown[currentLanguage]}` }, response.status));
+                if (!result.data) throw new Error(translations.errorNoResultData[currentLanguage]);
+
+                const output = result.data.outputs || result.data;
+                let finalImageUrl = null;
+                
+                for (const key in output) {
+                    const node = output[key];
+                    if (typeof node !== 'object' || node === null) continue;
+                    if (node?.images?.[0]?.url) { finalImageUrl = node.images[0].url; break; }
+                    if (Array.isArray(node) && node[0]?.url) { finalImageUrl = node[0].url; break; }
+                    if (node?.fileUrl) { finalImageUrl = node.fileUrl; break; }
+                }
+                
+                if (finalImageUrl) {
+                    saveImageToHistory(finalImageUrl);
+                    if (originalImageUrl) {
+                        resultImage.src = finalImageUrl;
+                        resultImage.style.display = 'block';
+                        sliderHandle.style.display = 'block';
+                        updateSlider(50, originalImageDisplay, resultImage, sliderHandle);
+                    } else {
+                        originalImageDisplay.src = finalImageUrl;
+                        originalImageUrl = finalImageUrl; 
+                        resultImage.src = '';
+                        resultImage.style.display = 'none';
+                        originalImageDisplay.style.clipPath = 'none';
+                        imageCompareContainer.style.display = 'block';
+                        fallbackImage.style.display = 'none';
+                        sliderHandle.style.display = 'none';
+                    }
+                } else { throw new Error(translations.errorNoImageInResult[currentLanguage]); }
+            } catch (error) {
+                console.error('Fetch result error:', error);
+                showUserError(error.message);
+            } finally {
+                if (currentTaskId === taskId) {
+                    setUiLoading(false);
+                    currentTaskId = null;
+                }
+            }
+        }
+
+        async function cancelTask() {
+            if (!currentTaskId) return;
+            const taskIdToCancel = currentTaskId;
+            resetState();
+            try {
+                const cancelUrl = 'https://www.runninghub.ai/task/openapi/cancel';
+                const payload = { apiKey: userApiKey, taskId: taskIdToCancel };
+                const response = await fetch(cancelUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.code !== 0) console.warn(`${translations.errorCancel[currentLanguage]} ${result.msg}`);
+            } catch (error) { console.error('Cancel task error:', error); }
+        }
+
+        // --- IMAGE COMPARER & PREVIEW LOGIC ---
+        function updateSlider(percentage, leftImg, rightImg, handle) {
+            percentage = Math.max(0, Math.min(100, percentage));
+            leftImg.style.clipPath = `polygon(0 0, ${percentage}% 0, ${percentage}% 100%, 0 100%)`;
+            rightImg.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
+            if (handle) handle.style.left = `${percentage}%`;
+        }
+        
+        function makeSliderFunctional(container, leftImg, rightImg, handle, icon) {
+             let isDragging = false;
+
+             function startDrag(e) {
+                 if (!rightImg.src) return;
+                 e.preventDefault();
+                 e.stopPropagation();
+                 isDragging = true;
+                 if (container.classList.contains('preview-container')) {
+                    container.classList.add('grabbing');
+                 } else {
+                    container.classList.add('dragging');
+                 }
+             }
+
+             function stopDrag() {
+                 if (isDragging) {
+                     isDragging = false;
+                     if (container.classList.contains('preview-container')) {
+                        container.classList.remove('grabbing');
+                     } else {
+                        container.classList.remove('dragging');
+                     }
+                      const rect = container.getBoundingClientRect();
+                      const isMouseOver = window.event.clientX >= rect.left && window.event.clientX <= rect.right &&
+                                        window.event.clientY >= rect.top && window.event.clientY <= rect.bottom;
+                      if (!isMouseOver && icon) {
+                          icon.style.opacity = '0';
+                      }
+                 }
+             }
+        
+             function doDrag(e) {
+                 if (!isDragging) return;
+                 const rect = container.getBoundingClientRect();
+                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                 const x = clientX - rect.left;
+                 updateSlider((x / rect.width) * 100, leftImg, rightImg, handle);
+                 if (icon) {
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const y = clientY - rect.top;
+                    icon.style.top = `${Math.max(0, Math.min(y - (icon.offsetHeight / 2), rect.height - icon.offsetHeight))}px`;
+                 }
+             }
+
+             handle.addEventListener('mousedown', startDrag);
+             handle.addEventListener('touchstart', startDrag, { passive: false });
+             window.addEventListener('mouseup', stopDrag);
+             window.addEventListener('touchend', stopDrag);
+             window.addEventListener('mousemove', doDrag);
+             window.addEventListener('touchmove', doDrag, { passive: false });
+
+             if (icon) {
+                 container.addEventListener('mouseenter', () => { if (rightImg.src) { icon.style.opacity = '1'; } });
+                 container.addEventListener('mouseleave', () => { if (!isDragging) { icon.style.opacity = '0'; } });
+                 container.addEventListener('mousemove', (e) => {
+                     if (!isDragging && rightImg.src) {
+                         const rect = container.getBoundingClientRect();
+                         const y = e.clientY - rect.top;
+                         icon.style.top = `${Math.max(0, Math.min(y - (icon.offsetHeight / 2), rect.height - icon.offsetHeight))}px`;
+                     }
+                 });
+             }
+        }
+        makeSliderFunctional(imageCompareContainer, originalImageDisplay, resultImage, sliderHandle, sliderIcon);
+        
+
+        // --- PREVIEW MODAL LOGIC ---
+        let scale = 1, panX = 0, panY = 0, isPanning = false, isDraggingPreviewSlider = false, start = { x: 0, y: 0 };
+        let previewImageWidth = 1, previewImageHeight = 1;
+
+        function updateTransform() { 
+            const transform = `translate(${panX}px, ${panY}px) scale(${scale})`; 
+            previewTransformWrapper.style.transform = transform; 
+        }
+        
+        previewBtn.addEventListener('click', () => { 
+            if (!originalImageDisplay.src) return; 
+            previewOriginalImage.src = originalImageDisplay.src; 
+            previewResultImage.src = resultImage.src || originalImageDisplay.src; 
+            
+            const loadImage = (img) => new Promise(resolve => { 
+                if (img.complete && img.naturalHeight !== 0) { resolve(img); } 
+                else { img.onload = () => resolve(img); } 
+            }); 
+            
+            Promise.all([loadImage(previewOriginalImage), loadImage(previewResultImage)]).then(([img1, img2]) => { 
+                const maxW = Math.max(img1.naturalWidth, img2.naturalWidth); 
+                const maxH = Math.max(img1.naturalHeight, img2.naturalHeight); 
+                previewImageWidth = maxW; 
+                previewImageHeight = maxH; 
+
+                previewTransformWrapper.style.width = `${maxW}px`;
+                previewTransformWrapper.style.height = `${maxH}px`;
+                previewOriginalImage.style.width = `100%`; 
+                previewOriginalImage.style.height = `100%`; 
+                previewResultImage.style.width = `100%`; 
+                previewResultImage.style.height = `100%`;
+                
+                const modalWidth = previewModal.clientWidth; 
+                const modalHeight = previewModal.clientHeight; 
+                scale = Math.min(modalWidth / maxW, modalHeight / maxH); 
+                panX = (modalWidth - maxW * scale) / 2; 
+                panY = (modalHeight - maxH * scale) / 2; 
+                updateTransform(); 
+                
+                if (previewOriginalImage.src !== previewResultImage.src) { 
+                    previewSliderHandle.style.display = 'block';
+                    updateSlider(50, previewOriginalImage, previewResultImage, previewSliderHandle); 
+                } else { 
+                    previewSliderHandle.style.display = 'none';
+                    updateSlider(100, previewOriginalImage, previewResultImage, null); 
+                } 
+            }); 
+            
+            previewModal.classList.remove('hidden'); 
+            previewCompareContainer.style.display = 'block'; 
+        });
+        
+        closePreviewBtn.addEventListener('click', () => { previewModal.classList.add('hidden'); });
+        
+        function startPan(e) {
+            if (e.target === previewSliderHandle || previewSliderHandle.contains(e.target)) {
+                 isDraggingPreviewSlider = true;
+                 return;
+            };
+            e.preventDefault();
+            const isTouchEvent = e.touches && e.touches.length > 0;
+            const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+
+            isPanning = true; 
+            previewCompareContainer.classList.add('grabbing'); 
+            start = { x: clientX - panX, y: clientY - panY }; 
+        }
+
+        function stopPan() {
+            if (isPanning) { isPanning = false; previewCompareContainer.classList.remove('grabbing'); }
+            if (isDraggingPreviewSlider) { isDraggingPreviewSlider = false; }
+        }
+
+        function handlePreviewMove(e) {
+            const isTouchEvent = e.touches && e.touches.length > 0;
+            if (isTouchEvent && (isPanning || isDraggingPreviewSlider)) e.preventDefault();
+            
+            const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+
+            if (isPanning) { 
+                panX = clientX - start.x; 
+                panY = clientY - start.y; 
+                updateTransform(); 
+            } else if (isDraggingPreviewSlider) {
+                const rect = previewCompareContainer.getBoundingClientRect();
+                const pointerXOnWrapper = ((clientX - rect.left) - panX) / scale;
+                const percentage = (pointerXOnWrapper / previewImageWidth) * 100;
+                updateSlider(percentage, previewOriginalImage, previewResultImage, previewSliderHandle);
+                 const pointerYOnWrapper = ((clientY - rect.top) - panY) / scale;
+                previewSliderIcon.style.top = `${Math.max(0, Math.min(pointerYOnWrapper - (previewSliderIcon.offsetHeight / 2), previewImageHeight - previewSliderIcon.offsetHeight))}px`;
+            } else if (previewOriginalImage.src !== previewResultImage.src) {
+                const rect = previewCompareContainer.getBoundingClientRect();
+                const pointerYOnWrapper = ((clientY - rect.top) - panY) / scale;
+                previewSliderIcon.style.top = `${Math.max(0, Math.min(pointerYOnWrapper - (previewSliderIcon.offsetHeight / 2), previewImageHeight - previewSliderIcon.offsetHeight))}px`;
+            }
+        }
+
+        previewCompareContainer.addEventListener('mousedown', startPan);
+        previewCompareContainer.addEventListener('touchstart', startPan, { passive: false });
+        window.addEventListener('mouseup', stopPan);
+        window.addEventListener('touchend', stopPan);
+        previewCompareContainer.addEventListener('mousemove', handlePreviewMove);
+        previewCompareContainer.addEventListener('touchmove', handlePreviewMove, { passive: false });
+
+        previewCompareContainer.addEventListener('mouseenter', () => { if (previewOriginalImage.src !== previewResultImage.src) { previewSliderIcon.style.opacity = '1'; } });
+        previewCompareContainer.addEventListener('mouseleave', () => { if (!isDraggingPreviewSlider) { previewSliderIcon.style.opacity = '0'; } });
+        
+        previewModal.addEventListener('wheel', (e) => { 
+            e.preventDefault(); 
+            const rect = previewModal.getBoundingClientRect(); 
+            const xs = (e.clientX - rect.left - panX) / scale; 
+            const ys = (e.clientY - rect.top - panY) / scale; 
+            const delta = -e.deltaY; 
+            const newScale = scale * Math.pow(1.1, delta > 0 ? 1 : -1); 
+            panX += xs * scale - xs * newScale; 
+            panY += ys * scale - ys * newScale; 
+            scale = newScale; 
+            updateTransform(); 
+        });
+        
+        
+        // --- BUTTONS & HISTORY LOGIC ---
+        useOriginalBtn.addEventListener('click', () => { if (initialUploadedImageFile) { handleFileSelect(initialUploadedImageFile, true); } else { showUserError(translations.errorNoInitialImage[currentLanguage]); } });
+        useResultBtn.addEventListener('click', async () => { const imageUrlToUse = (resultImage.src && !resultImage.src.startsWith('https://placehold.co')) ? resultImage.src : (originalImageDisplay.src && !originalImageDisplay.src.startsWith('blob:') && !originalImageDisplay.src.startsWith('https://placehold.co')) ? originalImageDisplay.src : null; if (!imageUrlToUse) { showUserError(translations.errorNoResultImage[currentLanguage]); return; } try { setUiLoading(true, translations.statusPreparingImage[currentLanguage]); const response = await fetch(imageUrlToUse); if (!response.ok) throw new Error('Could not fetch result image.'); const blob = await response.blob(); const file = new File([blob], "processed_image.png", { type: blob.type }); handleFileSelect(file, true); } catch (error) { console.error("Error using result image:", error); showUserError(translations.errorLoadResult[currentLanguage]); } finally { setUiLoading(false); } });
+        downloadBtn.addEventListener('click', async () => { const imageUrlToDownload = (resultImage.src && !resultImage.src.startsWith('https://placehold.co')) ? resultImage.src : (originalImageDisplay.src && !originalImageDisplay.src.startsWith('https://placehold.co')) ? originalImageDisplay.src : null; if (!imageUrlToDownload) { showUserError(translations.errorDownloadNoImage[currentLanguage]); return; } try { const response = await fetch(imageUrlToDownload); if (!response.ok) throw new Error(translations.errorDownloadFetch[currentLanguage]); const blob = await response.blob(); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `runninghub_ai_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); } catch (error) { console.error("Download error:", error); showUserError(translations.errorDownloadFailed[currentLanguage]); } });
+
+        function saveImageToHistory(url) {
+            if (!url || imageHistory.includes(url)) return;
+            imageHistory.unshift(url);
+            if (imageHistory.length > 51) imageHistory.pop();
+            localStorage.setItem('aiImageHistory', JSON.stringify(imageHistory));
+        }
+        function loadImageHistory() {
+            const storedHistory = localStorage.getItem('aiImageHistory');
+            if (storedHistory) imageHistory = JSON.parse(storedHistory);
+        }
+        function displayHistory() {
+            historyGrid.innerHTML = '';
+            if (imageHistory.length === 0) { 
+                const p = document.createElement('p');
+                p.className = 'col-span-3 text-center text-gray-500';
+                p.textContent = translations.historyEmpty[currentLanguage];
+                historyGrid.appendChild(p);
+                return;
+            }
+            imageHistory.forEach(url => { const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; const img = document.createElement('img'); img.src = url; img.className = 'w-full h-full object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity'; img.loading = 'lazy'; link.appendChild(img); historyGrid.appendChild(link); });
+        }
+        navHistory.addEventListener('click', () => { displayHistory(); historyModal.classList.remove('hidden'); setTimeout(() => { historyPanel.classList.remove('translate-x-full'); }, 10); });
+        function closeHistory() { historyPanel.classList.add('translate-x-full'); setTimeout(() => { historyModal.classList.add('hidden'); }, 300); }
+        closeHistoryBtn.addEventListener('click', closeHistory);
+        historyModal.addEventListener('click', (e) => { if (e.target === historyModal) closeHistory(); });
+        
+        document.body.addEventListener('touchstart', function(){
+            document.body.classList.add('touch');
+        }, { once: true });
+
+
+        // --- INITIAL UI SETUP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLanguage);
+            switchView('qwen');
+            loadImageHistory();
+        });
+
+    </script>
+</body>
+</html>
+
