@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TiNg RHtool</title>
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759916322/logo_tzk6ft.png">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1760352074/logo_TiNg_qobnrt.png">
     <link rel="apple-touch-icon" href="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758271750/logo_dia1pb.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -145,7 +145,7 @@
         </nav>
 
         <!-- Controls Panel -->
-        <div class="w-full lg:w-72 flex flex-col gap-4">
+        <div class="w-full lg:w-1/3 lg:max-w-xs flex flex-col gap-4">
              <!-- Functions & Models -->
             <div id="controls-container" class="control-section text-gray-800 flex-grow">
                  <!-- Qwen Controls -->
@@ -209,6 +209,8 @@
                                 <option value="change_bg" data-translate="funcChangeBg">Change Background</option>
                                 <option value="ge_2" data-translate="funcRestoreOldPhoto">Old Photo Restoration</option>
                                 <option value="ge_3" data-translate="funcDeblur">Deblur Image</option>
+                                <option value="id_photo" data-translate="funcIdPhoto">ID Photo Creation</option>
+                                <option value="face_swap" data-translate="funcFaceSwap">Face Swap</option>
                                 <option value="ecommerce_process" data-translate="funcEcommerce">E-commerce</option>
                                 <option value="ge_22" data-translate="funcAcneRemoval">Acne Removal, Skin Smoothing</option>
                                 <option value="ge_4" data-translate="funcRetouch">Image Retouch (makeup, brighten)</option>
@@ -243,7 +245,7 @@
                                 <p class="mt-1 pt-1 border-t border-gray-200"><span class="font-semibold" data-translate="suggestionLabel">Suggestion:</span> <span data-translate="upscaleSuggestion">If the image is very blurry or contains people, use SeedVR2. For general images, use RealESRGAN for faster results.</span></p>
                             </div>
                         </div>
-                         <!-- START: E-commerce Controls -->
+                         <!-- E-commerce Controls -->
                         <div id="ecommerce-controls" class="hidden flex-col space-y-2">
                             <label class="block text-sm font-medium" data-translate="effectLabel">Effect</label>
                             <div class="grid grid-cols-2 gap-3">
@@ -257,7 +259,7 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- END: E-commerce Controls -->
+                        <!-- Change Background Controls -->
                         <div id="change-bg-controls" class="hidden flex-col space-y-2">
                             <label class="block text-sm font-medium" data-translate="refBgLabel">Reference Background</label>
                             <div id="ref-bg-drop-zone" tabindex="0" class="relative w-full aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer focus:outline-none">
@@ -269,12 +271,17 @@
                             </div>
                             <input type="file" id="ref-bg-file-input" class="hidden" accept="image/*">
                         </div>
-                        <div id="ge-8-controls" class="hidden flex-col space-y-2">
+                        <!-- Old Photo Restoration Controls (New) -->
+                        <div id="ge-2-controls" class="hidden flex-col space-y-2">
                             <div class="flex items-center mt-2">
-                                <input id="strong-effect-checkbox" type="checkbox" class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-500">
-                                <label for="strong-effect-checkbox" class="ml-2 block text-sm" data-translate="strongEffectLabel">Strong Effect</label>
+                                <input id="less-impact-checkbox" type="checkbox" class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-500">
+                                <label for="less-impact-checkbox" class="ml-2 block text-sm" data-translate="lessImpactLabel">Less Impact</label>
                             </div>
                         </div>
+                        <!-- Harmonization Controls (from V1, but empty) -->
+                        <div id="ge-8-controls" class="hidden flex-col space-y-2">
+                        </div>
+                        <!-- Change Clothes Controls -->
                         <div id="ge-10-controls" class="hidden flex-col space-y-2">
                             <label class="block text-sm font-medium" data-translate="clothingImgLabel">Clothing Image</label>
                             <div id="clothing-img-drop-zone" tabindex="0" class="relative w-full aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer focus:outline-none">
@@ -285,6 +292,18 @@
                                 <button id="remove-clothing-img-btn" class="absolute -top-2 -right-2 bg-red-600 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-bold hidden z-10">&times;</button>
                             </div>
                             <input type="file" id="clothing-img-file-input" class="hidden" accept="image/*">
+                        </div>
+                        <!-- Face Swap Controls (New) -->
+                        <div id="face-swap-controls" class="hidden flex-col space-y-2">
+                            <label class="block text-sm font-medium" data-translate="faceSwapImgLabel">Face to Swap In</label>
+                            <div id="face-swap-drop-zone" tabindex="0" class="relative w-full aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer focus:outline-none">
+                                <div id="face-swap-upload-prompt" class="text-center pointer-events-none">
+                                     <p class="mt-1 text-xs" data-translate="uploadPrompt">Click, drag & drop, or paste image</p>
+                                </div>
+                                <img id="face-swap-preview" class="absolute hidden w-full h-full object-cover rounded-lg">
+                                <button id="remove-face-swap-btn" class="absolute -top-2 -right-2 bg-red-600 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-bold hidden z-10">&times;</button>
+                            </div>
+                            <input type="file" id="face-swap-file-input" class="hidden" accept="image/*">
                         </div>
                      </div>
                 </div>
@@ -452,6 +471,8 @@
             funcChangeBg: { en: 'Change Background', vi: 'Thay nền' },
             funcRestoreOldPhoto: { en: 'Old Photo Restoration', vi: 'Khôi phục ảnh cũ' },
             funcDeblur: { en: 'Deblur Image', vi: 'Làm nét ảnh mờ (deblur)' },
+            funcIdPhoto: { en: 'ID Photo Creation', vi: 'Tạo ảnh thẻ' },
+            funcFaceSwap: { en: 'Face Swap', vi: 'Thay thế khuôn mặt' },
             funcEcommerce: { en: 'E-commerce', vi: 'E-commerce' },
             funcAcneRemoval: { en: 'Acne Removal, Skin Smoothing', vi: 'Xóa mụn, mịn da' },
             funcRetouch: { en: 'Image Retouch (makeup, brighten)', vi: 'Chỉnh ảnh (trang điểm, làm sáng)' },
@@ -481,8 +502,9 @@
             effectMirrorAlt: { en: 'Mirror Effect', vi: 'Hiệu ứng gương' },
             effectMirrorLabel: { en: 'Mirror Effect', vi: 'Hiệu ứng gương' },
             refBgLabel: { en: 'Reference Background', vi: 'Background tham chiếu' },
-            strongEffectLabel: { en: 'Strong Effect', vi: 'Tác động mạnh' },
+            lessImpactLabel: { en: 'Less Impact', vi: 'Ít tác động' },
             clothingImgLabel: { en: 'Clothing Image', vi: 'Ảnh trang phục' },
+            faceSwapImgLabel: { en: 'Face to Swap In', vi: 'Khuôn mặt cần thay thế' },
             // Main Display
             fallbackImageAlt: { en: 'Result display area', vi: 'Vùng hiển thị kết quả' },
             originalImageAlt: { en: 'Original Image', vi: 'Ảnh gốc' },
@@ -511,6 +533,7 @@
             errorNoApiKey: { en: 'Please enter your API Key to use!', vi: 'Vui lòng nhập API Key của bạn để sử dụng!' },
             errorImgAndRefRequired: { en: 'This function requires both a main image and a reference image!', vi: 'Chức năng này yêu cầu cả ảnh chính và ảnh tham chiếu!' },
             errorImgRequired: { en: 'This function requires an image!', vi: 'Chức năng này yêu cầu phải có ảnh!' },
+            errorFaceSwapImgRequired: { en: 'This function requires an image of the face to swap!', vi: 'Chức năng này yêu cầu ảnh khuôn mặt cần thay thế!' },
             errorLayoutRequiresImgAndPrompt: { en: '"Keep layout" function requires both an image and a prompt!', vi: '"Giữ bố cục" yêu cầu cả ảnh và prompt!' },
             errorProvideInput: { en: 'Please enter a prompt or upload an image!', vi: 'Vui lòng nhập prompt hoặc tải ảnh lên!' },
             statusUploading: { en: 'Uploading image...', vi: 'Đang tải ảnh lên...' },
@@ -597,7 +620,6 @@
         const functionPreviewContainer = document.getElementById('function-preview-container');
         const functionPreviewImage = document.getElementById('function-preview-image');
         const fluxUpscaleControls = document.getElementById('flux-upscale-controls');
-        const ge8Controls = document.getElementById('ge-8-controls'); 
         
         const changeBgControls = document.getElementById('change-bg-controls');
         const refBgDropZone = document.getElementById('ref-bg-drop-zone');
@@ -613,7 +635,6 @@
         const clothingImgUploadPrompt = document.getElementById('clothing-img-upload-prompt');
         const removeClothingImgBtn = document.getElementById('remove-clothing-img-btn');
 
-        // Qwen Reference Image Elements
         const qwenRefContainer = document.getElementById('qwen-ref-container');
         const qwenRefDropZone = document.getElementById('qwen-ref-drop-zone');
         const qwenRefFileInput = document.getElementById('qwen-ref-file-input');
@@ -621,10 +642,20 @@
         const qwenRefUploadPrompt = document.getElementById('qwen-ref-upload-prompt');
         const removeQwenRefBtn = document.getElementById('remove-qwen-ref-btn');
         
-        // E-commerce Elements
         const ecommerceControls = document.getElementById('ecommerce-controls');
         const effectShadow = document.getElementById('effect-shadow');
         const effectMirror = document.getElementById('effect-mirror');
+
+        // New Elements
+        const ge2Controls = document.getElementById('ge-2-controls');
+        const lessImpactCheckbox = document.getElementById('less-impact-checkbox');
+        const faceSwapControls = document.getElementById('face-swap-controls');
+        const faceSwapDropZone = document.getElementById('face-swap-drop-zone');
+        const faceSwapFileInput = document.getElementById('face-swap-file-input');
+        const faceSwapPreview = document.getElementById('face-swap-preview');
+        const faceSwapUploadPrompt = document.getElementById('face-swap-upload-prompt');
+        const removeFaceSwapBtn = document.getElementById('remove-face-swap-btn');
+
 
         const previewBtn = document.getElementById('preview-btn');
         const useResultBtn = document.getElementById('use-result-btn');
@@ -654,6 +685,8 @@
         let clothingImageUrl = null;
         let qwenReferenceFile = null;
         let qwenReferenceUrl = null;
+        let faceSwapFile = null; // New state
+        let faceSwapUrl = null; // New state
         let activeProcessingMode = 'qwen'; 
         let imageHistory = [];
         let selectedEcommerceEffect = 1; // 1 for shadow, 2 for mirror
@@ -668,6 +701,8 @@
             'change_bg': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570523/thay_nen-min_vg2ydo.gif',
             'ge_2': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569598/phuc_che_qi0xo4.gif',
             'ge_3': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570516/delur-min_qhym2u.gif',
+            'id_photo': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1760321242/anh_the-min_hncm4b.gif',
+            'face_swap': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1760321276/face_swap-01_qsjs7r.jpg',
             'ge_22': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759572561/xoa_mun-min_wafsy0.gif',
             'ge_4': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569590/makup_qjvzhf.gif',
             'ge_8': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570316/blend-min_lp2igk.gif',
@@ -767,14 +802,17 @@
         }
 
         function updateControlsUI() {
+            // Hide all specific controls first
             aspectRatioContainer.style.display = 'none';
             upscaleControlsBasic.style.display = 'none';
             fluxUpscaleControls.style.display = 'none';
             changeBgControls.style.display = 'none';
-            ge8Controls.style.display = 'none';
+            ge2Controls.style.display = 'none';
             ge10Controls.style.display = 'none';
-            ecommerceControls.style.display = 'none'; 
+            ecommerceControls.style.display = 'none';
+            faceSwapControls.style.display = 'none'; 
 
+            // Show controls based on the active mode
             if (activeProcessingMode === 'qwen') {
                 if (keepLayoutCheckbox.checked) {
                     aspectRatioContainer.style.display = 'none';
@@ -787,12 +825,17 @@
                 fluxUpscaleControls.style.display = 'flex';
             } else if (activeProcessingMode === 'change_bg') {
                 changeBgControls.style.display = 'flex';
+            } else if (activeProcessingMode === 'ge_2') {
+                ge2Controls.style.display = 'flex';
             } else if (activeProcessingMode === 'ge_10') {
                 ge10Controls.style.display = 'flex';
             } else if (activeProcessingMode === 'ecommerce_process') {
                 ecommerceControls.style.display = 'flex';
+            } else if (activeProcessingMode === 'face_swap') {
+                faceSwapControls.style.display = 'flex';
             }
 
+            // Update preview image for advanced mode
             if (navAdvanced.classList.contains('active')) {
                 updateFunctionPreview(activeProcessingMode);
             } else {
@@ -836,7 +879,7 @@
         promptContainer.addEventListener('dragleave', (e) => { e.currentTarget.style.backgroundColor = 'white'; });
         promptContainer.addEventListener('drop', (e) => { e.preventDefault(); e.currentTarget.style.backgroundColor = 'white'; handleFileSelect(e.dataTransfer.files[0], true); });
         window.addEventListener('paste', (e) => {
-            if (document.activeElement !== refBgDropZone && document.activeElement !== clothingImgDropZone && document.activeElement !== qwenRefDropZone) {
+            if (document.activeElement !== refBgDropZone && document.activeElement !== clothingImgDropZone && document.activeElement !== qwenRefDropZone && document.activeElement !== faceSwapDropZone) {
                 for (const item of e.clipboardData.items) {
                     if (item.kind === 'file' && item.type.startsWith('image/')) {
                         handleFileSelect(item.getAsFile(), true);
@@ -919,6 +962,27 @@
             }
         }
         setupDropZone(qwenRefDropZone, qwenRefFileInput, qwenRefPreview, qwenRefUploadPrompt, removeQwenRefBtn, handleQwenRefFileSelect);
+
+        function handleFaceSwapFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                faceSwapFile = file;
+                if (faceSwapUrl) URL.revokeObjectURL(faceSwapUrl);
+                faceSwapUrl = URL.createObjectURL(file);
+                faceSwapPreview.src = faceSwapUrl;
+                faceSwapPreview.style.display = 'block';
+                faceSwapUploadPrompt.style.display = 'none';
+                removeFaceSwapBtn.style.display = 'flex';
+            } else {
+                faceSwapFile = null;
+                if (faceSwapUrl) URL.revokeObjectURL(faceSwapUrl);
+                faceSwapUrl = null;
+                faceSwapPreview.src = '';
+                faceSwapPreview.style.display = 'none';
+                faceSwapUploadPrompt.style.display = 'block';
+                removeFaceSwapBtn.style.display = 'none';
+            }
+        }
+        setupDropZone(faceSwapDropZone, faceSwapFileInput, faceSwapPreview, faceSwapUploadPrompt, removeFaceSwapBtn, handleFaceSwapFileSelect);
 
         // E-commerce effect selection logic
         effectShadow.addEventListener('click', () => {
@@ -1070,13 +1134,14 @@
             const promptText = promptInput.value.trim();
             const keepLayout = keepLayoutCheckbox.checked;
 
-            const imageRequiredModes = ['removebg', 'mask', 'upscale', 'flux_upscale', 'light_shadow', 'change_bg', 'ecommerce_process'];
+            const imageRequiredModes = ['removebg', 'mask', 'upscale', 'flux_upscale', 'light_shadow', 'change_bg', 'ecommerce_process', 'id_photo', 'face_swap'];
             if (selectedMode.startsWith('ge_')) imageRequiredModes.push(selectedMode);
             
             if (selectedMode === 'qwen' && qwenReferenceFile && !uploadedImageFile) { showUserError(translations.errorImgAndRefRequired[currentLanguage]); return; }
             if (!uploadedImageFile && imageRequiredModes.includes(selectedMode)) { showUserError(translations.errorImgRequired[currentLanguage]); return; }
             if (selectedMode === 'qwen' && keepLayout && (!uploadedImageFile || !promptText)) { showUserError(translations.errorLayoutRequiresImgAndPrompt[currentLanguage]); return; }
             if (selectedMode === 'qwen' && !keepLayout && !uploadedImageFile && !promptText && !qwenReferenceFile) { showUserError(translations.errorProvideInput[currentLanguage]); return; }
+            if (selectedMode === 'face_swap' && !faceSwapFile) { showUserError(translations.errorFaceSwapImgRequired[currentLanguage]); return; }
             
             setUiLoading(true, translations.statusUploading[currentLanguage]);
             try {
@@ -1085,6 +1150,7 @@
                 if (selectedMode === 'change_bg' && referenceBgFile) uploadPromises.push(uploadToRunningHub(referenceBgFile));
                 if (selectedMode === 'ge_10' && clothingImageFile) uploadPromises.push(uploadToRunningHub(clothingImageFile));
                 if (selectedMode === 'qwen' && qwenReferenceFile) uploadPromises.push(uploadToRunningHub(qwenReferenceFile));
+                if (selectedMode === 'face_swap' && faceSwapFile) uploadPromises.push(uploadToRunningHub(faceSwapFile));
                 
                 const uploadedUrls = await Promise.all(uploadPromises);
 
@@ -1093,6 +1159,8 @@
                 let referenceBgUrlForApi = (selectedMode === 'change_bg' && referenceBgFile) ? uploadedUrls[urlIndex++] : null;
                 let clothingImageUrlForApi = (selectedMode === 'ge_10' && clothingImageFile) ? uploadedUrls[urlIndex++] : null;
                 let qwenRefUrlForApi = (selectedMode === 'qwen' && qwenReferenceFile) ? uploadedUrls[urlIndex++] : null;
+                let faceSwapUrlForApi = (selectedMode === 'face_swap' && faceSwapFile) ? uploadedUrls[urlIndex++] : null;
+
 
                 setUiLoading(true, translations.statusInitializing[currentLanguage]);
                 let webappId, nodeInfoList;
@@ -1100,12 +1168,19 @@
                  if (selectedMode.startsWith('ge_')) {
                     if (selectedMode === 'ge_8') {
                         webappId = "1973954014482141186";
-                        nodeInfoList = [{
-                            "nodeId": "22", "fieldName": "image", "fieldValue": imageUrlForApi
-                        }];
+                        nodeInfoList = [{"nodeId": "22", "fieldName": "image", "fieldValue": imageUrlForApi }];
                     } else if (selectedMode === 'ge_2') {
-                        webappId = "1973579606852767746";
-                        nodeInfoList = [{"nodeId": "64", "fieldName": "image", "fieldValue": imageUrlForApi}];
+                        if (lessImpactCheckbox.checked) {
+                            webappId = "1956669205624053761";
+                            nodeInfoList = [
+                                { nodeId: "41", fieldName: "image", fieldValue: imageUrlForApi }, 
+                                { nodeId: "32", fieldName: "value", fieldValue: "27" }, 
+                                { nodeId: "33", fieldName: "text", fieldValue: promptText }
+                            ];
+                        } else {
+                            webappId = "1973579606852767746";
+                            nodeInfoList = [{"nodeId": "64", "fieldName": "image", "fieldValue": imageUrlForApi}];
+                        }
                     } else if (selectedMode === 'ge_10' && clothingImageFile && clothingImageUrlForApi) {
                         webappId = "1967543086240948226";
                         nodeInfoList = [
@@ -1154,6 +1229,20 @@
                                 { nodeId: "98", fieldName: "value", fieldValue: selectedEcommerceEffect.toString() }
                             ];
                             break;
+                        case 'id_photo':
+                             webappId = "1975402280528818177";
+                             nodeInfoList = [
+                                 { nodeId: "51", fieldName: "image", fieldValue: imageUrlForApi },
+                                 { nodeId: "54", fieldName: "text", fieldValue: promptText }
+                             ];
+                             break;
+                        case 'face_swap':
+                             webappId = "1977655752284360705";
+                             nodeInfoList = [
+                                 { nodeId: "178", fieldName: "image", fieldValue: imageUrlForApi },
+                                 { nodeId: "542", fieldName: "image", fieldValue: faceSwapUrlForApi }
+                             ];
+                             break;
                         case 'removebg': case 'mask': webappId = "1956204712976678913"; let modeValue = (selectedMode === 'removebg') ? '1' : '2'; nodeInfoList = [ { nodeId: "28", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "77", fieldName: "value", fieldValue: modeValue } ]; break;
                         case 'upscale': webappId = "1957633371671293954"; nodeInfoList = [ { nodeId: "1", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "11", fieldName: "value", fieldValue: document.getElementById('upscale-level').value } ]; break;
                         case 'flux_upscale':
@@ -1558,5 +1647,3 @@
     </script>
 </body>
 </html>
-
-
