@@ -220,6 +220,9 @@
                                 <option value="ge_10" data-translate="funcChangeClothes">Change Clothes</option>
                                 <option value="ge_14" data-translate="funcExtractClothes">Extract Clothes</option>
                                 <option value="ge_15" data-translate="funcExtractElements">Extract Image Elements</option>
+                                <!-- THÊM MỚI TẠI ĐÂY -->
+                                <option value="render_architecture" data-translate="funcRenderArchitecture">Render kiến trúc</option>
+                                <!-- KẾT THÚC THÊM MỚI -->
                                 <option value="ge_17" data-translate="funcVectorStyle">Vector Style</option>
                                 <option value="ge_11" data-translate="funcGhibliStyle">Ghibli Anime Style</option>
                                 <option value="ge_18" data-translate="func3DChibi">3D Chibi Style</option>
@@ -482,6 +485,9 @@
             funcChangeClothes: { en: 'Change Clothes', vi: 'Thay trang phục' },
             funcExtractClothes: { en: 'Extract Clothes', vi: 'Tách trang phục' },
             funcExtractElements: { en: 'Extract Image Elements', vi: 'Trích xuất hình ảnh' },
+            // THÊM MỚI TẠI ĐÂY
+            funcRenderArchitecture: { en: 'Architectural Rendering', vi: 'Render kiến trúc' },
+            // KẾT THÚC THÊM MỚI
             funcVectorStyle: { en: 'Vector Style', vi: 'Phong cách ảnh vector' },
             funcGhibliStyle: { en: 'Ghibli Anime Style', vi: 'Ảnh hoạt hình Ghibli' },
             func3DChibi: { en: '3D Chibi Style', vi: 'Ảnh 3D chibi' },
@@ -711,6 +717,9 @@
             'ge_10': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759648069/thay_trang_phuc4-01_wj35jq.jpg',
             'ge_14': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650925/tach_trang_phuc-min_ibyn7g.gif',
             'ge_15': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759651988/trich_xuat_rnrczq.gif',
+            // THÊM MỚI TẠI ĐÂY
+            'render_architecture': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1761291518/gif-1_1.5s_80p-min_up_xr8xac.gif',
+            // KẾT THÚC THÊM MỚI
             'ge_17': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/vector-min_cxcwgg.gif',
             'ge_11': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650961/hoat_hinh-min_um3thj.gif',
             'ge_18': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/3d_chibi-min_cfe0go.gif',
@@ -834,6 +843,7 @@
             } else if (activeProcessingMode === 'face_swap') {
                 faceSwapControls.style.display = 'flex';
             }
+            // Không cần thêm control UI cho 'render_architecture' vì nó chỉ dùng ảnh và text
 
             // Update preview image for advanced mode
             if (navAdvanced.classList.contains('active')) {
@@ -1134,7 +1144,9 @@
             const promptText = promptInput.value.trim();
             const keepLayout = keepLayoutCheckbox.checked;
 
-            const imageRequiredModes = ['removebg', 'mask', 'upscale', 'flux_upscale', 'light_shadow', 'change_bg', 'ecommerce_process', 'id_photo', 'face_swap'];
+            // THÊM MỚI TẠI ĐÂY
+            const imageRequiredModes = ['removebg', 'mask', 'upscale', 'flux_upscale', 'light_shadow', 'change_bg', 'ecommerce_process', 'id_photo', 'face_swap', 'render_architecture'];
+            // KẾT THÚC THÊM MỚI
             if (selectedMode.startsWith('ge_')) imageRequiredModes.push(selectedMode);
             
             if (selectedMode === 'qwen' && qwenReferenceFile && !uploadedImageFile) { showUserError(translations.errorImgAndRefRequired[currentLanguage]); return; }
@@ -1252,6 +1264,15 @@
                             break;
                         case 'change_bg': if (referenceBgFile && referenceBgUrlForApi) { webappId = "1961706336507641857"; nodeInfoList = [{ nodeId: "49", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "245", fieldName: "image", fieldValue: referenceBgUrlForApi }]; } else { webappId = "1956669205624053761"; nodeInfoList = [{ nodeId: "41", fieldName: "image", fieldValue: imageUrlForApi }, { nodeId: "32", fieldName: "value", fieldValue: "16" }, { nodeId: "33", fieldName: "text", fieldValue: promptText }]; } break;
                         case 'light_shadow': webappId = "1960150976252555265"; nodeInfoList = [{ nodeId: "47", fieldName: "image", fieldValue: imageUrlForApi }]; break;
+                        // THÊM MỚI TẠI ĐÂY
+                        case 'render_architecture': 
+                            webappId = "1980849016827236354";
+                            nodeInfoList = [
+                                { nodeId: "94", fieldName: "image", fieldValue: imageUrlForApi },
+                                { nodeId: "139", fieldName: "text", fieldValue: promptText }
+                            ];
+                            break;
+                        // KẾT THÚC THÊM MỚI
                     }
                 }
                 const runPayload = { webappId, apiKey: userApiKey, nodeInfoList };
@@ -1647,4 +1668,3 @@
     </script>
 </body>
 </html>
-
