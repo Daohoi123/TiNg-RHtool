@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TiNg RHtool</title>
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/drhqq7zti/image/upload/v1763371288/logo_TiNg_qobnrt_vipwjb.png">
-    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dzfuqyqoq/image/upload/v1758271750/logo_dia1pb.png">
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/drhqq7zti/image/upload/v1763371288/logo_TiNg_qobnrt_vipwjb.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -704,31 +704,31 @@
         let isRetryingTask = false; // <-- YÊU CẦU 1: Biến trạng thái retry
 
         const previewImages = {
-            'flux_upscale': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570520/tang_net-min_y7fvbl.gif',
-            'change_bg': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570523/thay_nen-min_vg2ydo.gif',
-            'ge_2': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569598/phuc_che_qi0xo4.gif',
-            'ge_3': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570516/delur-min_qhym2u.gif',
-            'id_photo': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1760321242/anh_the-min_hncm4b.gif',
-            'face_swap': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1760321276/face_swap-01_qsjs7r.jpg',
-            'ge_22': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759572561/xoa_mun-min_wafsy0.gif',
-            'ge_4': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759569590/makup_qjvzhf.gif',
-            'ge_8': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570316/blend-min_lp2igk.gif',
-            'light_shadow': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570987/light_and_shadow-min_szjbl5.gif',
-            'ge_9': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759570530/san_pham-min_wgc42q.gif',
-            'ge_10': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759648069/thay_trang_phuc4-01_wj35jq.jpg',
-            'ge_14': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650925/tach_trang_phuc-min_ibyn7g.gif',
-            'ge_15': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759651988/trich_xuat_rnrczq.gif',
+            'flux_upscale': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371852/tang_net-min_y7fvbl_lk0krt.gif',
+            'change_bg': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371868/thay_nen-min_vg2ydo_nnafnz.gif',
+            'ge_2': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371853/phuc_che_qi0xo4_rrdexj.gif',
+            'ge_3': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371276/delur-min_qhym2u_enx8sx.gif',
+            'id_photo': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371282/anh_the-min_hncm4b_qsw4ek.gif',
+            'face_swap': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371275/face_swap-01_qsjs7r_rofjlw.jpg',
+            'ge_22': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371865/xoa_mun-min_wafsy0_lnvvd1.gif',
+            'ge_4': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371300/makup_qjvzhf_hm8ulq.gif',
+            'ge_8': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371270/blend-min_lp2igk_g4dzsf.gif',
+            'light_shadow': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371299/light_and_shadow-min_szjbl5_vcglzn.gif',
+            'ge_9': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371844/san_pham-min_wgc42q_j2c0nk.gif',
+            'ge_10': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371844/san_pham-min_wgc42q_j2c0nk.gif',
+            'ge_14': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371859/tach_trang_phuc-min_ibyn7g_p9xsb0.gif',
+            'ge_15': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371856/trich_xuat_rnrczq_jhtzpy.gif',
             // THÊM MỚI TẠI ĐÂY
             'render_architecture': 'https://rh-images.xiaoyaoyou.com/574ffa72e8a033e11d5893895f51d8e9/2025-10-27/573330eb5116c97e2c08d88a6eff1b86.gif',
             // KẾT THÚC THÊM MỚI
-            'ge_17': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/vector-min_cxcwgg.gif',
-            'ge_11': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650961/hoat_hinh-min_um3thj.gif',
-            'ge_18': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/3d_chibi-min_cfe0go.gif',
-            'ge_19': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650927/mau_nuoc-min_qj1vio.gif',
-            'ge_20': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650929/tranh_trung_quoc-min_dt6rr2.gif',
-            'ge_13': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759649540/bien_hoa_nyhsqy.gif',
-            'ge_12': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1760521288/anh_sang-min_bsqpwk.gif',
-            'ge_30': 'https://res.cloudinary.com/dzfuqyqoq/image/upload/v1759650928/vien_vang-min_pdenyl.gif'
+            'ge_17': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371858/vector-min_cxcwgg_pyzc9u.gif',
+            'ge_11': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371290/hoat_hinh-min_um3thj_f4yrhv.gif',
+            'ge_18': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371266/3d_chibi-min_cfe0go_z4itog.gif',
+            'ge_19': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371331/mau_nuoc-min_qj1vio_brcll2.gif',
+            'ge_20': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371865/tranh_trung_quoc-min_dt6rr2_odtwnc.gif',
+            'ge_13': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371267/bien_hoa_nyhsqy_vrjdpm.gif',
+            'ge_12': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371273/anh_sang-min_bsqpwk_rlwxsz.gif',
+            'ge_30': 'https://res.cloudinary.com/drhqq7zti/image/upload/v1763371863/vien_vang-min_pdenyl_ry1ykn.gif'
         };
 
         // --- LANGUAGE/TRANSLATION LOGIC ---
@@ -1747,4 +1747,5 @@
     </script>
 </body>
 </html>
+
 
